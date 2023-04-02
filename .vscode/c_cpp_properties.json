@@ -1,0 +1,20 @@
+{
+    "configurations": [
+        {
+            "name": "undefined",
+            "cppStandard": "c++17",
+            "cStandard": "c99",
+            "intelliSenseMode": "linux-gcc-x64",
+            "compilerPath": "/usr/bin/g++",
+            "defines": [ ],
+            "includePath": [
+                "${workspaceFolder}/glad/include",
+                "${workspaceFolder}/glfw/include",
+                "${workspaceFolder}/imgui",
+                "${workspaceFolder}/src",
+                "${default}"
+            ]
+        }
+    ],
+    "version": 4
+}
