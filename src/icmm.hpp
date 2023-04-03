@@ -2,8 +2,8 @@
 #define FAFDC50E_50C6_4604_BCC7_169A58FAD0C0
 
 // ICMM is de-facto a glue interface between the
-// overall CMM software code that uses Eigen and my
-// code that uses (will use - 2023-04-03) GLM,
+// overall CMM software code that uses Eigen (I think...)
+// and my code that uses (will use - 2023-04-03) GLM,
 // so using POD types seems like a good idea.
 // NOTE: double the precision, double the fun
 using cmm_vec3_t = double[3];
