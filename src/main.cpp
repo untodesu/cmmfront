@@ -52,7 +52,6 @@ int main(int argc, char **argv)
     io.ConfigDockingWithShift = false;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
-    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
 
     ImGui::StyleColorsDark();
