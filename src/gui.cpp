@@ -1,21 +1,18 @@
+#include <algorithm>
+#include <cmd_comment.hpp>
 #include <globals.hpp>
 #include <gui.hpp>
 #include <imgui.h>
-
-// UNDONE: move this to globals
-static bool run_until_selection = false;
-
-// Proportional UI scaling
-static ImVec2 remap_vec2(const ImVec2 &vec, int width, int height)
-{
-    ImVec2 result = {};
-    result.x = (vec.x / 640.0f) * static_cast<float>(width);
-    result.y = (vec.y / 480.0f) * static_cast<float>(height);
-    return result;
-}
+#include <iostream>
+#include <stdio.h> // snprintf
 
 void gui::draw(int width, int height)
 {
+    // True when this frame has done something
+    // with the selected command so we don't
+    // automatically de-select it at the end.
+    bool selection_active = false;
+
     if(ImGui::BeginMainMenuBar()) {
         if(ImGui::BeginMenu("File")) {
             ImGui::MenuItem("New", "Ctrl+N");
@@ -33,63 +30,103 @@ void gui::draw(int width, int height)
     }
 
     if(ImGui::Begin("Commands"), nullptr, ImGuiWindowFlags_NoSavedSettings) {
-        ImGui::Button("Run");
+        if(ImGui::Button("Run")) {
+            std::cerr << "Unimplemented!" << std::endl;
+        }
+
         ImGui::SameLine();
-        ImGui::Button("Pause");
+        if(ImGui::Button("Pause")) {
+            std::cerr << "Unimplemented!" << std::endl;
+        }
+
         ImGui::SameLine();
-        ImGui::Button("Step");
+        if(ImGui::Button("Step")) {
+            std::cerr << "Unimplemented!" << std::endl;
+        }
+
         ImGui::SameLine();
-        ImGui::Button("Abort");
-        ImGui::Checkbox("Stop at selection", &run_until_selection);
+        if(ImGui::Button("Abort")) {
+            std::cerr << "Unimplemented!" << std::endl;
+        }
+
+        // When the flag is set, program execution stops
+        // at the first command/instruction that is considered selected
+        ImGui::Checkbox("Stop at selection", &globals::run_until_selection);
+
         ImGui::SeparatorText("Add");
-        ImGui::Button("Comment");
+
+        if(ImGui::Button("Comment")) { globals::commands.push_back(new CommentCmd{}); }
+
         ImGui::SameLine();
-        ImGui::Button("MoveAtXYZ");
+        if(ImGui::Button("MoveAtXYZ")) { std::cerr << "Unimplemented!" << std::endl; }
+
         ImGui::SameLine();
-        ImGui::Button("Point");
-        ImGui::Button("Plane");
+        if(ImGui::Button("Point")) { std::cerr << "Unimplemented!" << std::endl; }
+
+        if(ImGui::Button("Plane")) { std::cerr << "Unimplemented!" << std::endl; }
+
         ImGui::SameLine();
-        ImGui::Button("Circle");
-        ImGui::Button("Report");
+        if(ImGui::Button("Circle")) { std::cerr << "Unimplemented!" << std::endl; }
+
+        if(ImGui::Button("Report")) { std::cerr << "Unimplemented!" << std::endl; }
+
         ImGui::SeparatorText("Manage");
-        ImGui::Button("Move Up");
-        ImGui::SameLine();
-        ImGui::Button("Move Down");
-        ImGui::Button("Remove");
-        ImGui::SeparatorText("Commands");
 
-        if(ImGui::BeginChild("CommandList")) {
-            if(ImGui::CollapsingHeader("[0000] WhateverCommand")) {
-                ImGui::Text("Here would be some command options");
-                ImGui::Text("But for now there is just this stub text");
-                ImGui::Separator();
-                ImGui::Text("When unwrapped like that, a command is considered selected");
+        if(ImGui::Button("Move Up")) {
+            for(auto it = globals::commands.begin() + 1; it != globals::commands.end(); ++it) {
+                if(*it == globals::selected_command) {
+                    std::swap(*it, *(it - 1));
+                    selection_active = true;
+                    break;
+                }
             }
+        }
 
-            // UNDONE: go in a loop and draw commands like that
-            // UNDONE: set the header color for a command that is currently
-            // being executed (beheaded?!) to green or something else to show
-            // that this command is being executed (electric chair?!)
-            // UNDONE: a way to select a command so multiple commands
-            // can be unwrapped to view whatever the hell is going on in the CMM.
-            if(ImGui::CollapsingHeader("[0001] EmptyCommand")) { ImGui::Text("Insert a rickroll here"); }
-            if(ImGui::CollapsingHeader("[0002] EmptyCommand")) { ImGui::Text("Insert a rickroll here"); }
-            if(ImGui::CollapsingHeader("[0003] EmptyCommand")) { ImGui::Text("Insert a rickroll here"); }
-            if(ImGui::CollapsingHeader("[0004] EmptyCommand")) { ImGui::Text("Insert a rickroll here"); }
-            if(ImGui::CollapsingHeader("[0005] EmptyCommand")) { ImGui::Text("Insert a rickroll here"); }
-            if(ImGui::CollapsingHeader("[0006] EmptyCommand")) { ImGui::Text("Insert a rickroll here"); }
-            if(ImGui::CollapsingHeader("[0007] EmptyCommand")) { ImGui::Text("Insert a rickroll here"); }
-            if(ImGui::CollapsingHeader("[0008] EmptyCommand")) { ImGui::Text("Insert a rickroll here"); }
-            if(ImGui::CollapsingHeader("[0009] EmptyCommand")) { ImGui::Text("Insert a rickroll here"); }
-            if(ImGui::CollapsingHeader("[000A] EmptyCommand")) { ImGui::Text("Insert a rickroll here"); }
-            if(ImGui::CollapsingHeader("[000B] EmptyCommand")) { ImGui::Text("Insert a rickroll here"); }
+        ImGui::SameLine();
+        if(ImGui::Button("Move Down")) {
+            for(auto it = globals::commands.begin(); it != globals::commands.end() - 1; ++it) {
+                if(*it == globals::selected_command) {
+                    std::swap(*it, *(it + 1));
+                    selection_active = true;
+                    break;
+                }
+            }
+        }
 
-            if(ImGui::CollapsingHeader("[000C] AnotherCommand")) {
-                ImGui::Text("Here would be some command options");
-                ImGui::Text("But for now there is just this stub text");
-                ImGui::Separator();
+        if(ImGui::Button("Remove")) {
+            if(globals::selected_command) {
+                globals::commands.erase(std::remove(globals::commands.begin(), globals::commands.end(), globals::selected_command), globals::commands.end());
+                globals::selected_command = nullptr;
+            }
+        }
+
+        ImGui::SeparatorText("Commands");
+        if(ImGui::BeginChild("CommandList")) {
+            char stager[128] = {0};
+            size_t command_index = 0;
+
+            for(ICmd *it : globals::commands) {
+                // ImGui breaks if the collapsing headers
+                // have the same name (ie CommentCommand), so we
+                // have to introduce some unique-ness to them by
+                // prefixing them with a hexadecimal index.
+                // I don't know a better way than to snprintf it.
+                snprintf(stager, sizeof(stager), "[%04zX] %s", command_index++, it->get_name());
+
+                // Ensure the selected command is visible
+                // while de-selected commands are not
+                ImGui::SetNextItemOpen(globals::selected_command == it);
+
+                if(ImGui::CollapsingHeader(stager)) {
+                    globals::selected_command = it;
+                    selection_active = true;
+                    it->on_draw_imgui();
+                }
             }
         } ImGui::EndChild();
     } ImGui::End();
 
+    if(!selection_active) {
+        globals::selected_command = nullptr;
+    }
 }
