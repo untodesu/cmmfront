@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cmd_comment.hpp>
+#include <cmm_wrap.hpp>
 #include <globals.hpp>
 #include <gui.hpp>
 #include <imgui.h>
@@ -8,6 +9,11 @@
 
 void gui::draw(int width, int height)
 {
+    // True whenever there is a popup, or we are running
+    // the program. Changes on the fly is a cool thing but
+    // pretty much an unnececssary one in this case.
+    bool allow_changes = !globals::is_running_program && !globals::is_showing_popup;
+
     // True when this frame has done something
     // with the selected command so we don't
     // automatically de-select it at the end.
@@ -31,22 +37,30 @@ void gui::draw(int width, int height)
 
     if(ImGui::Begin("Commands"), nullptr, ImGuiWindowFlags_NoSavedSettings) {
         if(ImGui::Button("Run")) {
-            std::cerr << "Unimplemented!" << std::endl;
+            // Run (execute) the program
+            cmm_wrap::run();
         }
 
         ImGui::SameLine();
         if(ImGui::Button("Pause")) {
-            std::cerr << "Unimplemented!" << std::endl;
+            // Pause the execution, normal flow
+            // can be continued by pressing Run again
+            // or user can run commands step-by-step
+            cmm_wrap::pause();
         }
 
         ImGui::SameLine();
-        if(ImGui::Button("Step")) {
-            std::cerr << "Unimplemented!" << std::endl;
+        if(ImGui::Button("Step") && !globals::is_running_program) {
+            // Do a single step, works only when
+            // the execution is paused, ie is_running_program is false
+            cmm_wrap::step();
         }
 
         ImGui::SameLine();
         if(ImGui::Button("Abort")) {
-            std::cerr << "Unimplemented!" << std::endl;
+            // Stops the program execution at all,
+            // resetting the internal program counter
+            cmm_wrap::abort();
         }
 
         // When the flag is set, program execution stops
@@ -55,24 +69,36 @@ void gui::draw(int width, int height)
 
         ImGui::SeparatorText("Add");
 
-        if(ImGui::Button("Comment")) { globals::commands.push_back(new CommentCmd{}); }
+        if(ImGui::Button("Comment") && allow_changes) {
+            globals::commands.push_back(new CommentCmd{});
+        }
 
         ImGui::SameLine();
-        if(ImGui::Button("MoveAtXYZ")) { std::cerr << "Unimplemented!" << std::endl; }
+        if(ImGui::Button("MoveAtXYZ") && allow_changes) {
+            std::cerr << "Unimplemented!" << std::endl;
+        }
 
         ImGui::SameLine();
-        if(ImGui::Button("Point")) { std::cerr << "Unimplemented!" << std::endl; }
+        if(ImGui::Button("Point") && allow_changes) {
+            std::cerr << "Unimplemented!" << std::endl;
+        }
 
-        if(ImGui::Button("Plane")) { std::cerr << "Unimplemented!" << std::endl; }
+        if(ImGui::Button("Plane") && allow_changes) {
+            std::cerr << "Unimplemented!" << std::endl;
+        }
 
         ImGui::SameLine();
-        if(ImGui::Button("Circle")) { std::cerr << "Unimplemented!" << std::endl; }
+        if(ImGui::Button("Circle") && allow_changes) {
+            std::cerr << "Unimplemented!" << std::endl;
+        }
 
-        if(ImGui::Button("Report")) { std::cerr << "Unimplemented!" << std::endl; }
+        if(ImGui::Button("Report") && allow_changes) {
+            std::cerr << "Unimplemented!" << std::endl;
+        }
 
         ImGui::SeparatorText("Manage");
 
-        if(ImGui::Button("Move Up")) {
+        if(ImGui::Button("Move Up") && allow_changes) {
             for(auto it = globals::commands.begin() + 1; it != globals::commands.end(); ++it) {
                 if(*it == globals::selected_command) {
                     std::swap(*it, *(it - 1));
@@ -83,7 +109,7 @@ void gui::draw(int width, int height)
         }
 
         ImGui::SameLine();
-        if(ImGui::Button("Move Down")) {
+        if(ImGui::Button("Move Down") && allow_changes) {
             for(auto it = globals::commands.begin(); it != globals::commands.end() - 1; ++it) {
                 if(*it == globals::selected_command) {
                     std::swap(*it, *(it + 1));
@@ -93,7 +119,7 @@ void gui::draw(int width, int height)
             }
         }
 
-        if(ImGui::Button("Remove")) {
+        if(ImGui::Button("Remove") && allow_changes) {
             if(globals::selected_command) {
                 globals::commands.erase(std::remove(globals::commands.begin(), globals::commands.end(), globals::selected_command), globals::commands.end());
                 globals::selected_command = nullptr;
@@ -118,13 +144,27 @@ void gui::draw(int width, int height)
                 ImGui::SetNextItemOpen(globals::selected_command == it);
 
                 if(ImGui::CollapsingHeader(stager)) {
+                    if(allow_changes)
+                        it->on_draw_imgui();
                     globals::selected_command = it;
                     selection_active = true;
-                    it->on_draw_imgui();
                 }
             }
         } ImGui::EndChild();
     } ImGui::End();
+
+    if(globals::is_showing_popup) {
+        ImGui::OpenPopup("TEST");
+        if(ImGui::BeginPopup("TEST")) {
+            ImGui::TextUnformatted(globals::popup_text.c_str());
+            if(ImGui::Button("OK")) {
+                globals::is_showing_popup = false;
+                cmm_wrap::run();
+            }
+
+            ImGui::EndPopup();
+        }
+    }
 
     if(!selection_active) {
         globals::selected_command = nullptr;

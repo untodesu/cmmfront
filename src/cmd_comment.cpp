@@ -1,4 +1,6 @@
 #include <cmd_comment.hpp>
+#include <cmm_wrap.hpp>
+#include <globals.hpp>
 #include <imgui.h>
 #include <imgui_stdlib.h>
 #include <iostream>
@@ -15,9 +17,9 @@ const char *CommentCmd::get_name() const
 
 void CommentCmd::on_execute(ICMM *cmm)
 {
-    // UNDONE: show a window
-    std::cerr << "This should pause execution" << std::endl;
-    std::cerr << comment_text << std::endl;
+    cmm_wrap::pause();
+    globals::is_showing_popup = true;
+    globals::popup_text = comment_text;
 }
 
 void CommentCmd::on_draw_imgui()

@@ -1,3 +1,4 @@
+#include <cmm_wrap.hpp>
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 #include <globals.hpp>
@@ -78,6 +79,11 @@ int main(int argc, char **argv)
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(globals::window);
+
+        if(globals::is_running_program) {
+            std::cerr << "STEPPING" << std::endl;
+            cmm_wrap::step();
+        }
     }
 
     ImGui_ImplOpenGL3_Shutdown();
