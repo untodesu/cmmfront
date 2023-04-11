@@ -17,9 +17,15 @@ const char *CommentCmd::get_name() const
 
 void CommentCmd::on_execute(ICMM *cmm)
 {
-    cmm_wrap::pause();
-    globals::is_showing_popup = true;
-    globals::popup_text = comment_text;
+    if(!comment_text.empty()) {
+        globals::popup_class = "CommentCmd";
+        globals::popup_text = comment_text;
+    }
+    else {
+        // UNDONE: InvalidCommand popup class
+        globals::popup_class = "CommentCmd";
+        globals::popup_text = "<EMPTY>";
+    }
 }
 
 void CommentCmd::on_draw_imgui()

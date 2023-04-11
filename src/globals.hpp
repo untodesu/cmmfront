@@ -14,7 +14,7 @@ extern ICmd *selected_command;
 extern std::deque<ICmd *> commands;
 extern bool run_until_selection;
 extern bool is_running_program;
-extern bool is_showing_popup;
+extern std::string popup_class;
 extern std::string popup_text;
 } // namespace globals
 

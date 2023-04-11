@@ -41,9 +41,3 @@ void cmm_wrap::abort()
     globals::is_running_program = false;
     cmm_pc = globals::commands.end();
 }
-
-void cmm_wrap::pause()
-{
-    globals::is_running_program = false;
-    //cmm_pc = globals::commands.end();
-}

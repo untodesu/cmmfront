@@ -12,12 +12,17 @@ void gui::draw(int width, int height)
     // True whenever there is a popup, or we are running
     // the program. Changes on the fly is a cool thing but
     // pretty much an unnececssary one in this case.
-    bool allow_changes = !globals::is_running_program && !globals::is_showing_popup;
+    bool allow_changes = !globals::is_running_program;
 
     // True when this frame has done something
     // with the selected command so we don't
     // automatically de-select it at the end.
     bool selection_active = false;
+
+    if(!globals::popup_class.empty()) {
+        globals::is_running_program = false;
+        ImGui::OpenPopup(globals::popup_class.c_str());
+    }
 
     if(ImGui::BeginMainMenuBar()) {
         if(ImGui::BeginMenu("File")) {
@@ -46,7 +51,7 @@ void gui::draw(int width, int height)
             // Pause the execution, normal flow
             // can be continued by pressing Run again
             // or user can run commands step-by-step
-            cmm_wrap::pause();
+            globals::is_running_program = false;
         }
 
         ImGui::SameLine();
@@ -71,6 +76,7 @@ void gui::draw(int width, int height)
 
         if(ImGui::Button("Comment") && allow_changes) {
             globals::commands.push_back(new CommentCmd{});
+            cmm_wrap::abort();
         }
 
         ImGui::SameLine();
@@ -103,6 +109,7 @@ void gui::draw(int width, int height)
                 if(*it == globals::selected_command) {
                     std::swap(*it, *(it - 1));
                     selection_active = true;
+                    cmm_wrap::abort();
                     break;
                 }
             }
@@ -114,6 +121,7 @@ void gui::draw(int width, int height)
                 if(*it == globals::selected_command) {
                     std::swap(*it, *(it + 1));
                     selection_active = true;
+                    cmm_wrap::abort();
                     break;
                 }
             }
@@ -123,6 +131,7 @@ void gui::draw(int width, int height)
             if(globals::selected_command) {
                 globals::commands.erase(std::remove(globals::commands.begin(), globals::commands.end(), globals::selected_command), globals::commands.end());
                 globals::selected_command = nullptr;
+                cmm_wrap::abort();
             }
         }
 
@@ -153,17 +162,16 @@ void gui::draw(int width, int height)
         } ImGui::EndChild();
     } ImGui::End();
 
-    if(globals::is_showing_popup) {
-        ImGui::OpenPopup("TEST");
-        if(ImGui::BeginPopup("TEST")) {
-            ImGui::TextUnformatted(globals::popup_text.c_str());
-            if(ImGui::Button("OK")) {
-                globals::is_showing_popup = false;
-                cmm_wrap::run();
-            }
-
-            ImGui::EndPopup();
+    if(!globals::popup_text.empty() && ImGui::BeginPopupModal("CommentCmd")) {
+        ImGui::TextUnformatted(globals::popup_text.c_str());
+        if(ImGui::Button("OK")) {
+            ImGui::CloseCurrentPopup();
+            globals::popup_class.clear();
+            globals::popup_text.clear();
+            globals::is_running_program = true;
         }
+
+        ImGui::EndPopup();
     }
 
     if(!selection_active) {
