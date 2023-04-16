@@ -4,7 +4,6 @@
 
 namespace cmm_wrap
 {
-void run();
 void step();
 void abort();
 } // namespace cmm_wrap

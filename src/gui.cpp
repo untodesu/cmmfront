@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cmd_comment.hpp>
+#include <cmd_move_at.hpp>
 #include <cmm_wrap.hpp>
 #include <globals.hpp>
 #include <gui.hpp>
@@ -42,8 +43,9 @@ void gui::draw(int width, int height)
 
     if(ImGui::Begin("Commands"), nullptr, ImGuiWindowFlags_NoSavedSettings) {
         if(ImGui::Button("Run")) {
-            // Run (execute) the program
-            cmm_wrap::run();
+            if(globals::current == globals::commands.end())
+                globals::current = globals::commands.begin();
+            globals::is_running_program = true;
         }
 
         ImGui::SameLine();
@@ -56,8 +58,8 @@ void gui::draw(int width, int height)
 
         ImGui::SameLine();
         if(ImGui::Button("Step") && !globals::is_running_program) {
-            // Do a single step, works only when
-            // the execution is paused, ie is_running_program is false
+            if(globals::current == globals::commands.end())
+                globals::current = globals::commands.begin();
             cmm_wrap::step();
         }
 
@@ -68,10 +70,6 @@ void gui::draw(int width, int height)
             cmm_wrap::abort();
         }
 
-        // When the flag is set, program execution stops
-        // at the first command/instruction that is considered selected
-        ImGui::Checkbox("Stop at selection", &globals::run_until_selection);
-
         ImGui::SeparatorText("Add");
 
         if(ImGui::Button("Comment") && allow_changes) {
@@ -81,7 +79,8 @@ void gui::draw(int width, int height)
 
         ImGui::SameLine();
         if(ImGui::Button("MoveAtXYZ") && allow_changes) {
-            std::cerr << "Unimplemented!" << std::endl;
+            globals::commands.push_back(new MoveCmd{});
+            cmm_wrap::abort();
         }
 
         ImGui::SameLine();
@@ -129,6 +128,7 @@ void gui::draw(int width, int height)
 
         if(ImGui::Button("Remove") && allow_changes) {
             if(globals::selected_command) {
+                delete globals::selected_command;
                 globals::commands.erase(std::remove(globals::commands.begin(), globals::commands.end(), globals::selected_command), globals::commands.end());
                 globals::selected_command = nullptr;
                 cmm_wrap::abort();
@@ -146,7 +146,7 @@ void gui::draw(int width, int height)
                 // have to introduce some unique-ness to them by
                 // prefixing them with a hexadecimal index.
                 // I don't know a better way than to snprintf it.
-                snprintf(stager, sizeof(stager), "[%04zX] %s", command_index++, it->get_name());
+                snprintf(stager, sizeof(stager), "[%04zX] %s", command_index++, it->get_name().c_str());
 
                 // Ensure the selected command is visible
                 // while de-selected commands are not
@@ -162,7 +162,7 @@ void gui::draw(int width, int height)
         } ImGui::EndChild();
     } ImGui::End();
 
-    if(!globals::popup_text.empty() && ImGui::BeginPopupModal("CommentCmd")) {
+    if(!globals::popup_text.empty() && ImGui::BeginPopupModal("CommentCmd", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::TextUnformatted(globals::popup_text.c_str());
         if(ImGui::Button("OK")) {
             ImGui::CloseCurrentPopup();

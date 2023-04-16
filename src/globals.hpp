@@ -12,7 +12,7 @@ extern GLFWwindow *window;
 extern ICMM *machine;
 extern ICmd *selected_command;
 extern std::deque<ICmd *> commands;
-extern bool run_until_selection;
+extern std::deque<ICmd *>::iterator current;
 extern bool is_running_program;
 extern std::string popup_class;
 extern std::string popup_text;

@@ -5,8 +5,7 @@
 // overall CMM software code that uses Eigen (I think...)
 // and my code that uses (will use - 2023-04-03) GLM,
 // so using POD types seems like a good idea.
-// NOTE: double the precision, double the fun
-using cmm_vec3_t = double[3];
+using cmm_vec3_t = float[3];
 
 class ICMM {
 public:

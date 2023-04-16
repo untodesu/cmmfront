@@ -10,9 +10,11 @@ CmdType CommentCmd::get_type() const
     return CmdType::Comment;
 }
 
-const char *CommentCmd::get_name() const
+std::string CommentCmd::get_name() const
 {
-    return "CommentCmd";
+    if(!comment_text.empty())
+        return comment_text;
+    return "Empty Comment";
 }
 
 void CommentCmd::on_execute(ICMM *cmm)
@@ -24,11 +26,11 @@ void CommentCmd::on_execute(ICMM *cmm)
     else {
         // UNDONE: InvalidCommand popup class
         globals::popup_class = "CommentCmd";
-        globals::popup_text = "<EMPTY>";
+        globals::popup_text = "[Empty Comment]";
     }
 }
 
 void CommentCmd::on_draw_imgui()
 {
-    ImGui::InputTextMultiline("Comment", &comment_text);
+    ImGui::InputTextMultiline("Text", &comment_text);
 }

@@ -16,7 +16,7 @@ class ICmd {
 public:
     virtual ~ICmd() = default;
     virtual CmdType get_type() const = 0;
-    virtual const char *get_name() const = 0;
+    virtual std::string get_name() const = 0;
     virtual void on_execute(ICMM *cmm) = 0;
     virtual void on_draw_imgui() = 0;
 };

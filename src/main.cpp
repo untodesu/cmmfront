@@ -1,3 +1,4 @@
+#include <cmm_stub.hpp>
 #include <cmm_wrap.hpp>
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
@@ -60,6 +61,9 @@ int main(int argc, char **argv)
     ImGui_ImplGlfw_InitForOpenGL(globals::window, true);
     ImGui_ImplOpenGL3_Init("#version 330 core");
 
+    // This is a temporary solution
+    globals::machine = new CMMStub{};
+
     while(!glfwWindowShouldClose(globals::window)) {
         glfwPollEvents();
 
@@ -85,6 +89,9 @@ int main(int argc, char **argv)
             cmm_wrap::step();
         }
     }
+
+    // This is a temporary solution
+    delete globals::machine;
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();

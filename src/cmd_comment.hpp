@@ -9,7 +9,7 @@ public:
     virtual ~CommentCmd() = default;
 
     virtual CmdType get_type() const override;
-    virtual const char *get_name() const override;
+    virtual std::string get_name() const override;
     virtual void on_execute(ICMM *cmm) override;
     virtual void on_draw_imgui() override;
 
