@@ -8,6 +8,7 @@
             "compilerPath": "/usr/bin/g++",
             "defines": [ ],
             "includePath": [
+                "${workspaceFolder}/eigen",
                 "${workspaceFolder}/glad/include",
                 "${workspaceFolder}/glfw/include",
                 "${workspaceFolder}/imgui",

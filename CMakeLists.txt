@@ -12,6 +12,7 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
+add_subdirectory(eigen)
 add_subdirectory(glad)
 add_subdirectory(glfw)
 
@@ -33,4 +34,4 @@ add_executable(cmmfront
 target_include_directories(cmmfront PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/imgui"
     "${CMAKE_CURRENT_LIST_DIR}/src")
-target_link_libraries(cmmfront PRIVATE glad glfw)
+target_link_libraries(cmmfront PRIVATE eigen glad glfw)
