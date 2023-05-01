@@ -103,7 +103,7 @@ void gui::draw(int width, int height)
 
         ImGui::SeparatorText("Manage");
 
-        if(ImGui::Button("Move Up") && allow_changes) {
+        if(ImGui::Button("Move Up") && allow_changes && !globals::commands.empty()) {
             for(auto it = globals::commands.begin() + 1; it != globals::commands.end(); ++it) {
                 if(*it == globals::selected_command) {
                     std::swap(*it, *(it - 1));
@@ -115,7 +115,7 @@ void gui::draw(int width, int height)
         }
 
         ImGui::SameLine();
-        if(ImGui::Button("Move Down") && allow_changes) {
+        if(ImGui::Button("Move Down") && allow_changes && !globals::commands.empty()) {
             for(auto it = globals::commands.begin(); it != globals::commands.end() - 1; ++it) {
                 if(*it == globals::selected_command) {
                     std::swap(*it, *(it + 1));
@@ -126,7 +126,7 @@ void gui::draw(int width, int height)
             }
         }
 
-        if(ImGui::Button("Remove") && allow_changes) {
+        if(ImGui::Button("Remove") && allow_changes && !globals::commands.empty()) {
             if(globals::selected_command) {
                 delete globals::selected_command;
                 globals::commands.erase(std::remove(globals::commands.begin(), globals::commands.end(), globals::selected_command), globals::commands.end());
