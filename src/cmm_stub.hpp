@@ -9,8 +9,8 @@ public:
     virtual ~CMMStub() = default;
 
     virtual bool is_busy() const override;
-    virtual void cmd_move_at(const cmm_vec3_t &v) override;
-    virtual void cmd_point(const cmm_vec3_t &pos, const cmm_vec3_t &normal, cmm_vec3_t &out) override;
+    virtual void cmd_move_at(const Eigen::Vector3d &v) override;
+    virtual void cmd_point(const Eigen::Vector3d &pos, const Eigen::Vector3d &normal, Eigen::Vector3d &out) override;
 
 private:
     bool cmm_busy {false};

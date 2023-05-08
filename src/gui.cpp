@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cmd_comment.hpp>
 #include <cmd_move_at.hpp>
+#include <cmd_point.hpp>
 #include <cmm_wrap.hpp>
 #include <globals.hpp>
 #include <gui.hpp>
@@ -85,7 +86,8 @@ void gui::draw(int width, int height)
 
         ImGui::SameLine();
         if(ImGui::Button("Point") && allow_changes) {
-            std::cerr << "Unimplemented!" << std::endl;
+            globals::commands.push_back(new PointCmd{});
+            cmm_wrap::abort();
         }
 
         if(ImGui::Button("Plane") && allow_changes) {

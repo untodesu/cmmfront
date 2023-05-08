@@ -13,8 +13,7 @@ public:
     virtual void on_draw_imgui() override;
 
 private:
-    // FIXME: bring glm into the game
-    cmm_vec3_t position {};
+    Eigen::Vector3d position {};
     std::string display {};
 };
 

@@ -24,5 +24,12 @@ void MoveCmd::on_execute(ICMM *cmm)
 
 void MoveCmd::on_draw_imgui()
 {
-    ImGui::InputFloat3("Position", position);
+    float temp[3] = {};
+
+    temp[0] = position.x();
+    temp[1] = position.y();
+    temp[2] = position.z();
+    if(ImGui::InputFloat3("Position", temp)) {
+        position = Eigen::Vector3d{temp[0], temp[1], temp[2]};
+    }
 }
