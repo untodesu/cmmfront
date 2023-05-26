@@ -34,3 +34,8 @@ void CommentCmd::on_draw_imgui()
 {
     ImGui::InputTextMultiline("Text", &comment_text);
 }
+
+bool CommentCmd::validate()
+{
+    return true;
+}

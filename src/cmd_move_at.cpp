@@ -33,3 +33,8 @@ void MoveCmd::on_draw_imgui()
         position = Eigen::Vector3d{temp[0], temp[1], temp[2]};
     }
 }
+
+bool MoveCmd::validate()
+{
+    return true;
+}

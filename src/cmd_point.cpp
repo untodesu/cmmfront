@@ -71,3 +71,8 @@ void PointCmd::on_draw_imgui()
 
     ImGui::Text("REAL: %.3f %.3f %.3f", real_position.x(), real_position.y(), real_position.z());
 }
+
+bool PointCmd::validate()
+{
+    return true;
+}

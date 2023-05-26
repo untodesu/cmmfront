@@ -16,6 +16,7 @@ public:
     virtual std::string get_name() const override;
     virtual void on_execute(ICMM *cmm) override;
     virtual void on_draw_imgui() override;
+    virtual bool validate() override;
 
 private:
     std::string name {};
