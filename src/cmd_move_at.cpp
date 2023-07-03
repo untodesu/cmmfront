@@ -16,6 +16,16 @@ std::string MoveCmd::get_name() const
     return "Move At XYZ";
 }
 
+size_t MoveCmd::get_pcounter() const
+{
+    return my_pcounter;
+}
+
+void MoveCmd::set_pcounter(size_t val)
+{
+    my_pcounter = val;
+}
+
 void MoveCmd::on_execute(ICMM *cmm)
 {
     // FIXME: threading

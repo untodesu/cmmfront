@@ -38,6 +38,16 @@ std::string PointCmd::get_name() const
     return name + std::string{" (PointCmd)"};
 }
 
+size_t PointCmd::get_pcounter() const
+{
+    return my_pcounter;
+}
+
+void PointCmd::set_pcounter(size_t val)
+{
+    my_pcounter = val;
+}
+
 void PointCmd::on_execute(ICMM *cmm)
 {
     cmm->cmd_point(in_position, in_normal, real_position);
@@ -49,7 +59,13 @@ void PointCmd::on_draw_imgui()
     std::string temp_s = name;
 
     if(ImGui::InputText("Name", &temp_s)) {
-        // FIXME: force validation
+        for(auto it : globals::commands) {
+            if(it != this && reinterpret_cast<PointCmd *>(it)->name == temp_s) {
+                // Ensure things being unique
+                temp_s += "1";
+            }
+        }
+
         set_name(temp_s);
     }
 
@@ -69,7 +85,7 @@ void PointCmd::on_draw_imgui()
         real_position = Eigen::Vector3d{};
     }
 
-    ImGui::Text("REAL: %.3f %.3f %.3f", real_position.x(), real_position.y(), real_position.z());
+    ImGui::Text("Real Position: %.3f %.3f %.3f", real_position.x(), real_position.y(), real_position.z());
 }
 
 bool PointCmd::validate()

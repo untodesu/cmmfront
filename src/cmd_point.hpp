@@ -14,6 +14,8 @@ public:
 
     virtual CmdType get_type() const override;
     virtual std::string get_name() const override;
+    virtual size_t get_pcounter() const override;
+    virtual void set_pcounter(size_t val) override;
     virtual void on_execute(ICMM *cmm) override;
     virtual void on_draw_imgui() override;
     virtual bool validate() override;
@@ -23,6 +25,7 @@ private:
     Eigen::Vector3d in_normal {};
     Eigen::Vector3d in_position {};
     Eigen::Vector3d real_position {};
+    size_t my_pcounter {0};
 };
 
 #endif /* __SRC_CMD_POINT_HPP__ */

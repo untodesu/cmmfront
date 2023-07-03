@@ -2,6 +2,7 @@
 #include <cmd_comment.hpp>
 #include <cmd_move_at.hpp>
 #include <cmd_point.hpp>
+#include <cmd_plane.hpp>
 #include <cmm_wrap.hpp>
 #include <globals.hpp>
 #include <gui.hpp>
@@ -47,6 +48,15 @@ void gui::draw(int width, int height)
             if(globals::current == globals::commands.end())
                 globals::current = globals::commands.begin();
             globals::is_running_program = true;
+
+            for(auto it : globals::commands) {
+                if(!it->validate()) {
+                    globals::popup_class = "CommandList";
+                    globals::popup_text = "Command " + it->get_name() + " failed validation check!";
+                    globals::is_running_program = false;
+                    break;
+                }
+            }
         }
 
         ImGui::SameLine();
@@ -91,7 +101,8 @@ void gui::draw(int width, int height)
         }
 
         if(ImGui::Button("Plane") && allow_changes) {
-            std::cerr << "Unimplemented!" << std::endl;
+            globals::commands.push_back(new PlaneCmd{});
+            cmm_wrap::abort();
         }
 
         ImGui::SameLine();
@@ -143,12 +154,14 @@ void gui::draw(int width, int height)
             size_t command_index = 0;
 
             for(ICmd *it : globals::commands) {
+                it->set_pcounter(command_index++);
+
                 // ImGui breaks if the collapsing headers
                 // have the same name (ie CommentCommand), so we
                 // have to introduce some unique-ness to them by
                 // prefixing them with a hexadecimal index.
                 // I don't know a better way than to snprintf it.
-                snprintf(stager, sizeof(stager), "[%04zX] %s", command_index++, it->get_name().c_str());
+                snprintf(stager, sizeof(stager), "[%04zX] %s", it->get_pcounter(), it->get_name().c_str());
 
                 // Ensure the selected command is visible
                 // while de-selected commands are not
@@ -164,7 +177,7 @@ void gui::draw(int width, int height)
         } ImGui::EndChild();
     } ImGui::End();
 
-    if(!globals::popup_text.empty() && ImGui::BeginPopupModal("CommentCmd", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+    if(!globals::popup_text.empty() && ImGui::BeginPopupModal(globals::popup_class.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::TextUnformatted(globals::popup_text.c_str());
         if(ImGui::Button("OK")) {
             ImGui::CloseCurrentPopup();

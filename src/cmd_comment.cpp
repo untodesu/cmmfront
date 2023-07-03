@@ -17,6 +17,16 @@ std::string CommentCmd::get_name() const
     return "Empty Comment";
 }
 
+size_t CommentCmd::get_pcounter() const
+{
+    return my_pcounter;
+}
+
+void CommentCmd::set_pcounter(size_t val)
+{
+    my_pcounter = val;
+}
+
 void CommentCmd::on_execute(ICMM *cmm)
 {
     if(!comment_text.empty()) {
