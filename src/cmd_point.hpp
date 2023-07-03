@@ -2,14 +2,22 @@
 #define __SRC_CMD_POINT_HPP__
 #include <icmd.hpp>
 
+enum class PointType {
+    Generic = 0,
+    PlaneProj = 1,
+    CircleCenter = 2,
+    Count,
+};
+
+class PlaneCmd;
 class PointCmd final : public ICmd {
 public:
     PointCmd() = default;
     virtual ~PointCmd() = default;
 
     void set_name(const std::string &name);
-    const Eigen::Vector3d &get_in_normal() const;
-    const Eigen::Vector3d &get_in_position() const;
+    const Eigen::Vector3d &get_calc_normal() const;
+    const Eigen::Vector3d &get_calc_position() const;
     const Eigen::Vector3d &get_real_position() const;
 
     virtual CmdType get_type() const override;
@@ -22,10 +30,13 @@ public:
 
 private:
     std::string name {};
-    Eigen::Vector3d in_normal {};
-    Eigen::Vector3d in_position {};
+    Eigen::Vector3d calc_normal {};
+    Eigen::Vector3d calc_position {};
     Eigen::Vector3d real_position {};
+    Eigen::Vector3d calc_proj_target {};
     size_t my_pcounter {0};
+    PointType point_type {PointType::Generic};
+    PlaneCmd *target_plane {nullptr};
 };
 
 #endif /* __SRC_CMD_POINT_HPP__ */

@@ -9,14 +9,14 @@ bool math::plane_calc(const std::unordered_set<const PointCmd *> &points, Eigen:
 
     if(points.size() >= 3) {
         for(auto it : points)
-            offset += it->get_in_position();
+            offset += it->get_calc_position();
         offset /= static_cast<double>(points.size());
 
         size_t index = 0;
         for(auto it : points) {
             if(index >= 3)
                 break;
-            pts[index++] = it->get_in_position();
+            pts[index++] = it->get_calc_position();
         }
 
         Eigen::Vector3d a = pts[1] - pts[0];
