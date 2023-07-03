@@ -34,7 +34,8 @@ add_executable(cmmfront
     "${CMAKE_CURRENT_LIST_DIR}/src/cmm_wrap.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/src/globals.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/src/gui.cpp"
-    "${CMAKE_CURRENT_LIST_DIR}/src/main.cpp")
+    "${CMAKE_CURRENT_LIST_DIR}/src/main.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/src/math_plane.cpp")
 target_include_directories(cmmfront PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/imgui"
     "${CMAKE_CURRENT_LIST_DIR}/src")

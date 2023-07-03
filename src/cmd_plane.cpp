@@ -3,7 +3,7 @@
 #include <globals.hpp>
 #include <imgui.h>
 #include <imgui_stdlib.h>
-#include <iostream>
+#include <math_plane.hpp>
 
 void PlaneCmd::set_name(const std::string &name)
 {
@@ -54,25 +54,7 @@ void PlaneCmd::set_pcounter(size_t val)
 
 void PlaneCmd::on_execute(ICMM *cmm)
 {
-    Eigen::Vector3d pts[3];
-
-    real_normal.setZero();
-    real_offset.setZero();
-
-    for(auto it : points)
-        real_offset += it->get_real_position();
-    real_offset /= static_cast<double>(points.size());
-
-    size_t index = 0;
-    for(auto it : points) {
-        if(index >= 3)
-            break;
-        pts[index++] = it->get_real_position();
-    }
-
-    Eigen::Vector3d a = pts[1] - pts[0];
-    Eigen::Vector3d b = pts[2] - pts[0];
-    real_normal = a.cross(b).normalized();
+    math::plane_real(points, real_offset, real_normal);
 }
 
 void PlaneCmd::on_draw_imgui()
@@ -106,7 +88,7 @@ void PlaneCmd::on_draw_imgui()
                     if(!ImGui::Selectable(pit->get_name().c_str()))
                         continue;
                     points.insert(pit);
-                    solve_for_ideal();
+                    math::plane_calc(points, calc_offset, calc_normal);
                 }
             }
         }
@@ -121,7 +103,7 @@ void PlaneCmd::on_draw_imgui()
             for(auto it = points.begin(); it != points.end(); ++it) {
                 if((*it)->get_pcounter() > my_pcounter) {
                     it = points.erase(it);
-                    solve_for_ideal();
+                    math::plane_calc(points, calc_offset, calc_normal);
                     if(it != points.end())
                         continue;
                     break;
@@ -130,7 +112,7 @@ void PlaneCmd::on_draw_imgui()
                 if(!ImGui::Selectable((*it)->get_name().c_str()))
                     continue;
                 it = points.erase(it);
-                solve_for_ideal();
+                math::plane_calc(points, calc_offset, calc_normal);
 
                 // YIKES!
                 if(it != points.end())
@@ -168,27 +150,4 @@ bool PlaneCmd::validate()
 
     // Not enough points
     return false;
-}
-
-void PlaneCmd::solve_for_ideal()
-{
-    Eigen::Vector3d pts[3];
-
-    calc_normal.setZero();
-    calc_offset.setZero();
-
-    for(auto it : points)
-        calc_offset += it->get_in_position();
-    calc_offset /= static_cast<double>(points.size());
-
-    size_t index = 0;
-    for(auto it : points) {
-        if(index >= 3)
-            break;
-        pts[index++] = it->get_in_position();
-    }
-
-    Eigen::Vector3d a = pts[1] - pts[0];
-    Eigen::Vector3d b = pts[2] - pts[0];
-    calc_normal = a.cross(b).normalized();
 }

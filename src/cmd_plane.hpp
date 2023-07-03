@@ -22,8 +22,6 @@ public:
     virtual void on_draw_imgui() override;
     virtual bool validate() override;
 
-    virtual void solve_for_ideal();
-
 private:
     std::string name {};
     Eigen::Vector3d calc_normal {};

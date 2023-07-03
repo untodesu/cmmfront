@@ -43,7 +43,11 @@ void gui::draw(int width, int height)
         ImGui::EndMainMenuBar();
     }
 
-    if(ImGui::Begin("Commands"), nullptr, ImGuiWindowFlags_NoSavedSettings) {
+    if(ImGui::Begin("Commands"), nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize) {
+        ImGui::SetWindowPos(ImVec2{16.0f, 32.0f}, ImGuiCond_Always);
+        ImGui::SetWindowSize(ImVec2{static_cast<float>(width) - 32.0f, static_cast<float>(height) - 48.0f}, ImGuiCond_Always);
+
+
         if(ImGui::Button("Run")) {
             if(globals::current == globals::commands.end())
                 globals::current = globals::commands.begin();
@@ -53,6 +57,8 @@ void gui::draw(int width, int height)
                 if(!it->validate()) {
                     globals::popup_class = "CommandList";
                     globals::popup_text = "Command " + it->get_name() + " failed validation check!";
+                    globals::selected_command = it;
+                    globals::current = globals::commands.end();
                     globals::is_running_program = false;
                     break;
                 }

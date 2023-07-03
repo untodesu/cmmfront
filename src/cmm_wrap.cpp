@@ -5,7 +5,7 @@
 
 void cmm_wrap::step()
 {
-    if(globals::current != globals::commands.end()) {
+    if(!globals::commands.empty() && globals::current != globals::commands.end()) {
         ICmd *command = (*globals::current);
 
         // Run whatever code the command implements
