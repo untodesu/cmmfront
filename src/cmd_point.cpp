@@ -66,6 +66,7 @@ void PointCmd::on_execute(ICMM *cmm)
 void PointCmd::on_draw_imgui()
 {
     float temp[3];
+    char stager[128] = {0};
     std::string temp_s = name;
 
     if(ImGui::InputText("Name", &temp_s)) {
@@ -123,7 +124,8 @@ void PointCmd::on_draw_imgui()
                 if(it->get_pcounter() < my_pcounter && it->get_type() == CmdType::MeasurePlane) {
                     PlaneCmd *pcmd = reinterpret_cast<PlaneCmd *>(it);
                     bool selected = (target_plane == pcmd);
-                    if(!ImGui::Selectable(it->get_name().c_str(), &selected))
+                    snprintf(stager, sizeof(stager), "%s [%04zX]", it->get_name().c_str(), it->get_pcounter());
+                    if(!ImGui::Selectable(stager, &selected))
                         continue;
                     target_plane = pcmd;
                     calc_point = math::plane_proj(target_plane->get_calc_point(), target_plane->get_calc_normal(), calc_proj_target);

@@ -19,7 +19,7 @@ std::string ReportCmd::get_name() const
 {
     if(name.empty())
         return std::string{"Unnamed ReportCmd"};
-    return name;
+    return name + std::string{" (ReportCmd)"};
 }
 
 size_t ReportCmd::get_pcounter() const
@@ -39,6 +39,7 @@ void ReportCmd::on_execute(ICMM *cmm)
 
 void ReportCmd::on_draw_imgui()
 {
+    char stager[128] = {0};
     std::string temp_s = name;
 
     if(ImGui::InputText("Name", &temp_s)) {
@@ -61,7 +62,8 @@ void ReportCmd::on_draw_imgui()
                     case CmdType::MeasurePlane:
                     case CmdType::MeasureCircle:
                         bool selected = (it == target);
-                        if(ImGui::Selectable(it->get_name().c_str(), &selected))
+                        snprintf(stager, sizeof(stager), "%s [%04zX]", it->get_name().c_str(), it->get_pcounter());
+                        if(ImGui::Selectable(stager, &selected))
                             target = it;
                         break;
                 }

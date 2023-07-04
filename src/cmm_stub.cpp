@@ -10,7 +10,7 @@ bool CMMStub::is_busy() const
 void CMMStub::cmd_move_at(const Eigen::Vector3d &v)
 {
     cmm_busy = true;
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     cmm_busy = false;
 }
 

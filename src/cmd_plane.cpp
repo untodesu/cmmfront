@@ -39,7 +39,7 @@ std::string PlaneCmd::get_name() const
 {
     if(name.empty())
         return std::string{"Unnamed PlaneCmd"};
-    return name;
+    return name + std::string{" (PlaneCmd)"};
 }
 
 size_t PlaneCmd::get_pcounter() const
@@ -59,7 +59,7 @@ void PlaneCmd::on_execute(ICMM *cmm)
 
 void PlaneCmd::on_draw_imgui()
 {
-    float temp[3];
+    char stager[128] = {0};
     std::string temp_s = name;
 
     if(ImGui::InputText("Name", &temp_s)) {
@@ -83,7 +83,8 @@ void PlaneCmd::on_draw_imgui()
             if(it->get_type() == CmdType::MeasurePoint && it->get_pcounter() < my_pcounter) {
                 PointCmd *pit = reinterpret_cast<PointCmd *>(it);
                 if(points.count(pit) == 0) {
-                    if(!ImGui::Selectable(pit->get_name().c_str()))
+                    snprintf(stager, sizeof(stager), "%s [%04zX]", pit->get_name().c_str(), pit->get_pcounter());
+                    if(!ImGui::Selectable(stager))
                         continue;
                     points.insert(pit);
                     math::plane_calc(points, calc_point, calc_normal);
@@ -104,7 +105,8 @@ void PlaneCmd::on_draw_imgui()
                 break;
             }
 
-            if(!ImGui::Selectable((*it)->get_name().c_str()))
+            snprintf(stager, sizeof(stager), "%s [%04zX]", (*it)->get_name().c_str(), (*it)->get_pcounter());
+            if(!ImGui::Selectable(stager))
                 continue;
             it = points.erase(it);
             math::plane_calc(points, calc_point, calc_normal);
