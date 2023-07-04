@@ -5,3 +5,13 @@
 [X] ReportCmd for points
 [X] ReportCmd for planes
 [ ] ReportCmd for circles
+
+2d projection (I think):
+    1. Take two points on the plane
+    2. Make a vector
+    3. Normalize the little shit
+    4. Crossproduct it with the normal vector
+    5. Vectors from step 3 and 4 are now unit vectors
+    6. Put two unit vectors into a 3x2 matrix 
+    7. Multiply it by the target point
+    8. Get 2D coordinates of said point
