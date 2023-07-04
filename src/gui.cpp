@@ -3,6 +3,7 @@
 #include <cmd_move_at.hpp>
 #include <cmd_point.hpp>
 #include <cmd_plane.hpp>
+#include <cmd_report.hpp>
 #include <cmm_wrap.hpp>
 #include <globals.hpp>
 #include <gui.hpp>
@@ -117,7 +118,8 @@ void gui::draw(int width, int height)
         }
 
         if(ImGui::Button("Report") && allow_changes) {
-            std::cerr << "Unimplemented!" << std::endl;
+            globals::commands.push_back(new ReportCmd{});
+            cmm_wrap::abort();
         }
 
         ImGui::SeparatorText("Manage");
@@ -162,12 +164,15 @@ void gui::draw(int width, int height)
             for(ICmd *it : globals::commands) {
                 it->set_pcounter(command_index++);
 
+                bool current = (it == *globals::current);
+                const std::string stub = current ? std::string{"[PC]"} : std::string{"    "};
+
                 // ImGui breaks if the collapsing headers
                 // have the same name (ie CommentCommand), so we
                 // have to introduce some unique-ness to them by
                 // prefixing them with a hexadecimal index.
                 // I don't know a better way than to snprintf it.
-                snprintf(stager, sizeof(stager), "[%04zX] %s", it->get_pcounter(), it->get_name().c_str());
+                snprintf(stager, sizeof(stager), "[%04zX] %s %s", it->get_pcounter(), it->get_name().c_str(), stub.c_str());
 
                 // Ensure the selected command is visible
                 // while de-selected commands are not

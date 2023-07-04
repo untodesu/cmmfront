@@ -1,0 +1,7 @@
+[ ] CircleCmd
+[ ] PointCmd from circle's center
+[X] PlaneCmd
+[X] PointCmd projection
+[X] ReportCmd for points
+[X] ReportCmd for planes
+[ ] ReportCmd for circles

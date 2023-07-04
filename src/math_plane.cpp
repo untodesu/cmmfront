@@ -1,22 +1,22 @@
 #include <math_plane.hpp>
 
-bool math::plane_calc(const std::unordered_set<const PointCmd *> &points, Eigen::Vector3d &offset, Eigen::Vector3d &normal)
+bool math::plane_calc(const std::unordered_set<const PointCmd *> &points, Eigen::Vector3d &point, Eigen::Vector3d &normal)
 {
     Eigen::Vector3d pts[3];
 
     normal.setZero();
-    offset.setZero();
+    point.setZero();
 
     if(points.size() >= 3) {
         for(auto it : points)
-            offset += it->get_calc_position();
-        offset /= static_cast<double>(points.size());
+            point += it->get_calc_point();
+        point /= static_cast<double>(points.size());
 
         size_t index = 0;
         for(auto it : points) {
             if(index >= 3)
                 break;
-            pts[index++] = it->get_calc_position();
+            pts[index++] = it->get_calc_point();
         }
 
         Eigen::Vector3d a = pts[1] - pts[0];
@@ -29,23 +29,23 @@ bool math::plane_calc(const std::unordered_set<const PointCmd *> &points, Eigen:
     return false;
 }
 
-bool math::plane_real(const std::unordered_set<const PointCmd *> &points, Eigen::Vector3d &offset, Eigen::Vector3d &normal)
+bool math::plane_real(const std::unordered_set<const PointCmd *> &points, Eigen::Vector3d &point, Eigen::Vector3d &normal)
 {
     Eigen::Vector3d pts[3];
 
     normal.setZero();
-    offset.setZero();
+    point.setZero();
 
     if(points.size() >= 3) {
         for(auto it : points)
-            offset += it->get_real_position();
-        offset /= static_cast<double>(points.size());
+            point += it->get_real_point();
+        point /= static_cast<double>(points.size());
 
         size_t index = 0;
         for(auto it : points) {
             if(index >= 3)
                 break;
-            pts[index++] = it->get_real_position();
+            pts[index++] = it->get_real_point();
         }
 
         Eigen::Vector3d a = pts[1] - pts[0];

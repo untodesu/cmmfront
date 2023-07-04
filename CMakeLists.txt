@@ -30,6 +30,7 @@ add_executable(cmmfront
     "${CMAKE_CURRENT_LIST_DIR}/src/cmd_move_at.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/src/cmd_plane.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/src/cmd_point.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/src/cmd_report.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/src/cmm_stub.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/src/cmm_wrap.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/src/globals.cpp"

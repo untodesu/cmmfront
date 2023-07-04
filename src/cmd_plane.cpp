@@ -15,9 +15,9 @@ const Eigen::Vector3d &PlaneCmd::get_calc_normal() const
     return calc_normal;
 }
 
-const Eigen::Vector3d &PlaneCmd::get_calc_position() const
+const Eigen::Vector3d &PlaneCmd::get_calc_point() const
 {
-    return calc_offset;
+    return calc_point;
 }
 
 const Eigen::Vector3d &PlaneCmd::get_real_normal() const
@@ -25,9 +25,9 @@ const Eigen::Vector3d &PlaneCmd::get_real_normal() const
     return real_normal;
 }
 
-const Eigen::Vector3d &PlaneCmd::get_real_position() const
+const Eigen::Vector3d &PlaneCmd::get_real_point() const
 {
-    return real_offset;
+    return real_point;
 }
 
 CmdType PlaneCmd::get_type() const
@@ -54,7 +54,7 @@ void PlaneCmd::set_pcounter(size_t val)
 
 void PlaneCmd::on_execute(ICMM *cmm)
 {
-    math::plane_real(points, real_offset, real_normal);
+    math::plane_real(points, real_point, real_normal);
 }
 
 void PlaneCmd::on_draw_imgui()
@@ -64,7 +64,7 @@ void PlaneCmd::on_draw_imgui()
 
     if(ImGui::InputText("Name", &temp_s)) {
         for(auto it : globals::commands) {
-            if(it != this && reinterpret_cast<PlaneCmd *>(it)->name == temp_s) {
+            if(it != this && it->get_name() == temp_s) {
                 // Ensure things being unique
                 temp_s += "1";
             }
@@ -73,55 +73,46 @@ void PlaneCmd::on_draw_imgui()
         set_name(temp_s);
     }
 
-    ImGui::Text("Offset: %.3f %.3f %.3f", calc_offset.x(), calc_offset.y(), calc_offset.z());
-    ImGui::Text("Normal: %.3f %.3f %.3f", calc_normal.x(), calc_normal.y(), calc_normal.z());
-    ImGui::Text("Real offset: %.3f %.3f %.3f", real_offset.x(), real_offset.y(), real_offset.z());
-    ImGui::Text("Real normal: %.3f %.3f %.3f", real_normal.x(), real_normal.y(), real_normal.z());
+    ImGui::Text("Guessed point: %.3f %.3f %.3f", calc_point.x(), calc_point.y(), calc_point.z());
+    ImGui::Text("Guessed normal: %.3f %.3f %.3f", calc_normal.x(), calc_normal.y(), calc_normal.z());
+    ImGui::Text("Actual point: %.3f %.3f %.3f", real_point.x(), real_point.y(), real_point.z());
+    ImGui::Text("Actual normal: %.3f %.3f %.3f", real_normal.x(), real_normal.y(), real_normal.z());
 
     if(ImGui::ListBoxHeader("Unselected points")) {
-        bool flag = false;
         for(auto it : globals::commands) {
             if(it->get_type() == CmdType::MeasurePoint && it->get_pcounter() < my_pcounter) {
                 PointCmd *pit = reinterpret_cast<PointCmd *>(it);
                 if(points.count(pit) == 0) {
-                    flag = true;
                     if(!ImGui::Selectable(pit->get_name().c_str()))
                         continue;
                     points.insert(pit);
-                    math::plane_calc(points, calc_offset, calc_normal);
+                    math::plane_calc(points, calc_point, calc_normal);
                 }
             }
         }
 
-        if(!flag)
-            ImGui::Selectable("[Empty list]");
         ImGui::ListBoxFooter();
     }
 
     if(ImGui::ListBoxHeader("Selected points")) {
-        if(!points.empty()) {
-            for(auto it = points.begin(); it != points.end(); ++it) {
-                if((*it)->get_pcounter() > my_pcounter) {
-                    it = points.erase(it);
-                    math::plane_calc(points, calc_offset, calc_normal);
-                    if(it != points.end())
-                        continue;
-                    break;
-                }
-
-                if(!ImGui::Selectable((*it)->get_name().c_str()))
-                    continue;
+        for(auto it = points.begin(); it != points.end(); ++it) {
+            if((*it)->get_pcounter() > my_pcounter) {
                 it = points.erase(it);
-                math::plane_calc(points, calc_offset, calc_normal);
-
-                // YIKES!
+                math::plane_calc(points, calc_point, calc_normal);
                 if(it != points.end())
                     continue;
                 break;
             }
-        }
-        else {
-            ImGui::Selectable("[Empty list]");
+
+            if(!ImGui::Selectable((*it)->get_name().c_str()))
+                continue;
+            it = points.erase(it);
+            math::plane_calc(points, calc_point, calc_normal);
+
+            // YIKES!
+            if(it != points.end())
+                continue;
+            break;
         }
         ImGui::ListBoxFooter();
     }
