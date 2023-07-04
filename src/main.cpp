@@ -16,9 +16,24 @@ static void on_glfw_error(int code, const char *str)
     std::terminate();
 }
 
+static bool cmm_poll_stop = false;
+static void cmm_poll()
+{
+    while(!cmm_poll_stop) {
+        if(globals::is_running_program) {
+            std::cerr << "STEPPING" << std::endl;
+            cmm_wrap::step();
+            continue;
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+}
+
 int main(int argc, char **argv)
 {
     int width, height;
+    std::thread poll_thread = std::thread{};
 
     glfwSetErrorCallback(&on_glfw_error);
 
@@ -64,6 +79,9 @@ int main(int argc, char **argv)
     // This is a temporary solution
     globals::machine = new CMMStub{};
 
+    cmm_poll_stop = false;
+    poll_thread = std::thread{&cmm_poll};
+
     while(!glfwWindowShouldClose(globals::window)) {
         glfwPollEvents();
 
@@ -83,12 +101,10 @@ int main(int argc, char **argv)
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(globals::window);
-
-        if(globals::is_running_program) {
-            std::cerr << "STEPPING" << std::endl;
-            cmm_wrap::step();
-        }
     }
+
+    cmm_poll_stop = true;
+    poll_thread.join();
 
     // This is a temporary solution
     delete globals::machine;

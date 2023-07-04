@@ -10,6 +10,11 @@
 #include <imgui.h>
 #include <iostream>
 #include <stdio.h> // snprintf
+#include <sstream>
+#include <ios>
+#include <mutex>
+
+static std::mutex gui_mutex = {};
 
 void gui::draw(int width, int height)
 {
@@ -23,9 +28,9 @@ void gui::draw(int width, int height)
     // automatically de-select it at the end.
     bool selection_active = false;
 
-    if(!globals::popup_class.empty()) {
+    if(!globals::popups.empty()) {
         globals::is_running_program = false;
-        ImGui::OpenPopup(globals::popup_class.c_str());
+        ImGui::OpenPopup(globals::popups.back().title.c_str());
     }
 
     if(ImGui::BeginMainMenuBar()) {
@@ -40,6 +45,40 @@ void gui::draw(int width, int height)
                 glfwSetWindowShouldClose(globals::window, true);
             ImGui::EndMenu();
         }
+
+        if(globals::machine->get_cap(CmmCap::DebugCMM)) {
+            if(ImGui::BeginMenu("Debug")) {
+                double temp;
+
+                temp = globals::machine->get_opt(CmmOpt::DebugRandomness);
+                if(ImGui::InputDouble("Randomness", &temp)) {
+                    globals::machine->set_opt(CmmOpt::DebugRandomness, temp);
+                }
+
+                temp = globals::machine->get_opt(CmmOpt::DebugTimeDelay);
+                if(ImGui::InputDouble("Time Delay", &temp)) {
+                    globals::machine->set_opt(CmmOpt::DebugTimeDelay, temp);
+                }
+
+                ImGui::EndMenu();
+            }
+        }
+
+        ImGui::Separator();
+
+        const bool is_running = globals::is_running_program;
+        const bool is_busy = globals::machine->is_busy();
+        const char *string_status = "[IDLE // STOP]";
+        if(is_busy && is_running)
+            string_status = "[BUSY // EXEC]";
+        else if(is_busy)
+            string_status = "[BUSY // STOP]";
+        else if(is_running)
+            string_status = "[IDLE // EXEC]";
+        ImGui::MenuItem(globals::machine->get_ident(), nullptr, nullptr, false);
+        ImGui::MenuItem(string_status, nullptr, nullptr, false);
+
+        ImGui::Separator();
 
         ImGui::EndMainMenuBar();
     }
@@ -56,8 +95,11 @@ void gui::draw(int width, int height)
 
             for(auto it : globals::commands) {
                 if(!it->validate()) {
-                    globals::popup_class = "CommandList";
-                    globals::popup_text = "Command " + it->get_name() + " failed validation check!";
+                    globals::popups.push(Popup {
+                        .title = "Validation",
+                        .content = std::string{"Command "} + std::string{it->get_name()} + std::string{ "failed validation check!"},
+                        .abortable = false,
+                    });
                     globals::selected_command = it;
                     globals::current = globals::commands.end();
                     globals::is_running_program = false;
@@ -164,15 +206,12 @@ void gui::draw(int width, int height)
             for(ICmd *it : globals::commands) {
                 it->set_pcounter(command_index++);
 
-                bool current = (it == *globals::current);
-                const std::string stub = current ? std::string{"[PC]"} : std::string{"    "};
-
                 // ImGui breaks if the collapsing headers
                 // have the same name (ie CommentCommand), so we
                 // have to introduce some unique-ness to them by
                 // prefixing them with a hexadecimal index.
                 // I don't know a better way than to snprintf it.
-                snprintf(stager, sizeof(stager), "[%04zX] %s %s", it->get_pcounter(), it->get_name().c_str(), stub.c_str());
+                snprintf(stager, sizeof(stager), "[%04zX] %s", it->get_pcounter(), it->get_name().c_str());
 
                 // Ensure the selected command is visible
                 // while de-selected commands are not
@@ -188,16 +227,32 @@ void gui::draw(int width, int height)
         } ImGui::EndChild();
     } ImGui::End();
 
-    if(!globals::popup_text.empty() && ImGui::BeginPopupModal(globals::popup_class.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::TextUnformatted(globals::popup_text.c_str());
-        if(ImGui::Button("OK")) {
-            ImGui::CloseCurrentPopup();
-            globals::popup_class.clear();
-            globals::popup_text.clear();
-            globals::is_running_program = true;
+    if(!globals::popups.empty()) {
+        gui_mutex.lock();
+
+        const Popup &info = globals::popups.back();
+
+        if(ImGui::BeginPopupModal(info.title.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::TextUnformatted(info.content.c_str());
+
+            if(info.abortable && ImGui::Button("Abort")) {
+                ImGui::CloseCurrentPopup();
+                globals::popups.pop();
+                cmm_wrap::abort();
+
+                ImGui::SameLine();
+            }
+
+            if(ImGui::Button(info.abortable ? "Continue" : "OK")) {
+                ImGui::CloseCurrentPopup();
+                globals::popups.pop();
+                globals::is_running_program = true;
+            }
+
+            ImGui::EndPopup();
         }
 
-        ImGui::EndPopup();
+        gui_mutex.unlock();
     }
 
     if(!selection_active) {

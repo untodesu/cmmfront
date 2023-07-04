@@ -30,13 +30,20 @@ void CommentCmd::set_pcounter(size_t val)
 void CommentCmd::on_execute(ICMM *cmm)
 {
     if(!comment_text.empty()) {
-        globals::popup_class = "CommentCmd";
-        globals::popup_text = comment_text;
+        globals::is_running_program = false;
+        globals::popups.push(Popup {
+            .title = "Comment",
+            .content = comment_text,
+            .abortable = true,
+        });
     }
     else {
-        // UNDONE: InvalidCommand popup class
-        globals::popup_class = "CommentCmd";
-        globals::popup_text = "[Empty Comment]";
+        globals::is_running_program = false;
+        globals::popups.push(Popup {
+            .title = "Comment",
+            .content = "[Empty Comment]",
+            .abortable = true,
+        });
     }
 }
 
