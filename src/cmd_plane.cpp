@@ -3,31 +3,20 @@
 #include <globals.hpp>
 #include <imgui.h>
 #include <imgui_stdlib.h>
-#include <math_plane.hpp>
 
 void PlaneCmd::set_name(const std::string &name)
 {
     this->name = name;
 }
 
-const Eigen::Vector3d &PlaneCmd::get_calc_normal() const
+const Plane &PlaneCmd::get_calc_plane() const
 {
-    return calc_normal;
+    return calc_plane;
 }
 
-const Eigen::Vector3d &PlaneCmd::get_calc_point() const
+const Plane &PlaneCmd::get_real_plane() const
 {
-    return calc_point;
-}
-
-const Eigen::Vector3d &PlaneCmd::get_real_normal() const
-{
-    return real_normal;
-}
-
-const Eigen::Vector3d &PlaneCmd::get_real_point() const
-{
-    return real_point;
+    return real_plane;
 }
 
 CmdType PlaneCmd::get_type() const
@@ -54,7 +43,8 @@ void PlaneCmd::set_pcounter(size_t val)
 
 void PlaneCmd::on_execute(ICMM *cmm)
 {
-    math::plane_real(points, real_point, real_normal);
+    calc_plane.set_guess(points);
+    real_plane.set_actual(points);
 }
 
 void PlaneCmd::on_draw_imgui()
@@ -73,6 +63,10 @@ void PlaneCmd::on_draw_imgui()
         set_name(temp_s);
     }
 
+    const Eigen::Vector3d &calc_point = calc_plane.get_point();
+    const Eigen::Vector3d &calc_normal = calc_plane.get_normal();
+    const Eigen::Vector3d &real_point = real_plane.get_point();
+    const Eigen::Vector3d &real_normal = real_plane.get_normal();
     ImGui::Text("Guessed point: %.3f %.3f %.3f", calc_point.x(), calc_point.y(), calc_point.z());
     ImGui::Text("Guessed normal: %.3f %.3f %.3f", calc_normal.x(), calc_normal.y(), calc_normal.z());
     ImGui::Text("Actual point: %.3f %.3f %.3f", real_point.x(), real_point.y(), real_point.z());
@@ -87,7 +81,7 @@ void PlaneCmd::on_draw_imgui()
                     if(!ImGui::Selectable(stager))
                         continue;
                     points.insert(pit);
-                    math::plane_calc(points, calc_point, calc_normal);
+                    calc_plane.set_guess(points);
                 }
             }
         }
@@ -99,7 +93,7 @@ void PlaneCmd::on_draw_imgui()
         for(auto it = points.begin(); it != points.end(); ++it) {
             if((*it)->get_pcounter() > my_pcounter) {
                 it = points.erase(it);
-                math::plane_calc(points, calc_point, calc_normal);
+                calc_plane.set_guess(points);
                 if(it != points.end())
                     continue;
                 break;
@@ -109,7 +103,7 @@ void PlaneCmd::on_draw_imgui()
             if(!ImGui::Selectable(stager))
                 continue;
             it = points.erase(it);
-            math::plane_calc(points, calc_point, calc_normal);
+            calc_plane.set_guess(points);
 
             // YIKES!
             if(it != points.end())

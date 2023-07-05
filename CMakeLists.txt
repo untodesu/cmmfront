@@ -26,6 +26,7 @@ add_executable(cmmfront
     "${CMAKE_CURRENT_LIST_DIR}/imgui/imgui_tables.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/imgui/imgui_widgets.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/imgui/imgui.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/src/cmd_circle.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/src/cmd_comment.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/src/cmd_move_at.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/src/cmd_plane.cpp"
@@ -36,7 +37,7 @@ add_executable(cmmfront
     "${CMAKE_CURRENT_LIST_DIR}/src/globals.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/src/gui.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/src/main.cpp"
-    "${CMAKE_CURRENT_LIST_DIR}/src/math_plane.cpp")
+    "${CMAKE_CURRENT_LIST_DIR}/src/plane.cpp")
 target_include_directories(cmmfront PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/imgui"
     "${CMAKE_CURRENT_LIST_DIR}/src")

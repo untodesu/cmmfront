@@ -91,10 +91,10 @@ void ReportCmd::on_draw_imgui()
 
         if(type == CmdType::MeasurePlane) {
             const PlaneCmd *plane = reinterpret_cast<const PlaneCmd *>(target);
-            const Eigen::Vector3d calc_normal = plane->get_calc_normal();
-            const Eigen::Vector3d calc_point = plane->get_calc_point();
-            const Eigen::Vector3d real_normal = plane->get_real_normal();
-            const Eigen::Vector3d real_point = plane->get_real_point();
+            const Eigen::Vector3d calc_normal = plane->get_calc_plane().get_normal();
+            const Eigen::Vector3d calc_point = plane->get_calc_plane().get_point();
+            const Eigen::Vector3d real_normal = plane->get_real_plane().get_normal();
+            const Eigen::Vector3d real_point = plane->get_real_plane().get_point();
             ImGui::Text("Guessed Normal: %.3f %.3f %.3f", calc_normal.x(), calc_normal.y(), calc_normal.z());
             ImGui::Text("Guessed Point: %.3f %.3f %.3f", calc_point.x(), calc_point.y(), calc_point.z());
             ImGui::Text("Actual Normal: %.3f %.3f %.3f", real_normal.x(), real_normal.y(), real_normal.z());

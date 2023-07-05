@@ -6,7 +6,6 @@
 #include <imgui_stdlib.h>
 #include <iostream>
 #include <sstream>
-#include <math_plane.hpp>
 
 void PointCmd::set_name(const std::string &name)
 {
@@ -57,8 +56,8 @@ void PointCmd::on_execute(ICMM *cmm)
             cmm->cmd_point(calc_point, calc_normal, real_point);
             break;
         case PointType::PlaneProj:
-            calc_point = math::plane_proj(target_plane->get_calc_point(), target_plane->get_calc_normal(), calc_proj_target);
-            real_point = math::plane_proj(target_plane->get_real_point(), target_plane->get_real_normal(), calc_proj_target);
+            calc_point = target_plane->get_calc_plane().project3d(calc_proj_target);
+            real_point = target_plane->get_real_plane().project3d(calc_proj_target);
             break;
     }
 }
@@ -111,7 +110,7 @@ void PointCmd::on_draw_imgui()
         if(ImGui::InputFloat3("Target", temp)) {
             calc_proj_target = Eigen::Vector3d{temp[0], temp[1], temp[2]};
             if(target_plane)
-                calc_point = math::plane_proj(target_plane->get_calc_point(), target_plane->get_calc_normal(), calc_proj_target);
+                calc_point =  target_plane->get_calc_plane().project3d(calc_proj_target);
             else
                 calc_point = Eigen::Vector3d{};
             real_point = Eigen::Vector3d{};
@@ -128,7 +127,7 @@ void PointCmd::on_draw_imgui()
                     if(!ImGui::Selectable(stager, &selected))
                         continue;
                     target_plane = pcmd;
-                    calc_point = math::plane_proj(target_plane->get_calc_point(), target_plane->get_calc_normal(), calc_proj_target);
+                    calc_point = target_plane->get_calc_plane().project3d(calc_proj_target);
                     real_point = Eigen::Vector3d{};
                 }
             }
