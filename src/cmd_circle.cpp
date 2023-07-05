@@ -3,6 +3,7 @@
 #include <globals.hpp>
 #include <imgui.h>
 #include <imgui_stdlib.h>
+#include <iostream>
 
 void CircleCmd::set_name(const std::string &name)
 {
@@ -166,7 +167,9 @@ void CircleCmd::solve_calc()
         for(auto it : points) {
             if(idx >= 3)
                 break;
-            pts[idx++] = calc_plane.project2d(it->get_calc_point());
+            pts[idx] = calc_plane.project2d(it->get_calc_point());
+            std::cerr << pts[idx].x() << " " << pts[idx].y() << std::endl;
+            ++idx;
         }
 
         const double X12 = pts[0].x() - pts[1].x();
@@ -191,7 +194,7 @@ void CircleCmd::solve_calc()
         const double k = -1.0 * f;
         const double sq = pow(h, 2.0) + pow(k, 2.0) - c;
 
-        calc_center = Eigen::Vector3d{h, k, 0.0};
+        calc_center = calc_plane.unproject2d(Eigen::Vector2d{h, k});
         calc_radius = sqrt(sq);
     }
 }

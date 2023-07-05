@@ -1,19 +1,5 @@
 #include <plane.hpp>
 
-void Plane::set(const Eigen::Vector3d &pv, const Eigen::Vector3d &nv)
-{
-    point = pv;
-    normal = nv.normalized();
-    const Eigen::Vector3d unit_x = point.normalized();
-    const Eigen::Vector3d unit_y = unit_x.cross(normal).normalized();
-    matrix(0) = unit_x.x();
-    matrix(1) = unit_x.y();
-    matrix(2) = unit_x.z();
-    matrix(3) = unit_y.x();
-    matrix(4) = unit_y.y();
-    matrix(5) = unit_y.z();
-}
-
 bool Plane::set_guess(const std::unordered_set<const PointCmd *> &points)
 {
     Eigen::Vector3d pts[3];
@@ -33,18 +19,39 @@ bool Plane::set_guess(const std::unordered_set<const PointCmd *> &points)
             pts[idx++] = it->get_calc_point();
         }
 
-        const Eigen::Vector3d u = pts[1] - pts[0];
-        const Eigen::Vector3d v = pts[2] - pts[0];
-        normal = u.cross(v).normalized();
+        const Eigen::Vector3d AB = pts[1] - pts[0];
+        const Eigen::Vector3d AC = pts[2] - pts[0];
+        normal = AB.cross(AC).normalized();
 
-        const Eigen::Vector3d unit_x = u.normalized();
-        const Eigen::Vector3d unit_y = unit_x.cross(normal);
-        matrix(0) = unit_x.x();
-        matrix(1) = unit_x.y();
-        matrix(2) = unit_x.z();
-        matrix(3) = unit_y.x();
-        matrix(4) = unit_y.y();
-        matrix(5) = unit_y.z();
+        const Eigen::Vector3d U = AB.normalized();
+        const Eigen::Vector3d V = AB.normalized().cross(normal);
+
+        const Eigen::Vector3d bA = pts[0];
+        const Eigen::Vector3d bU = pts[0] + U;
+        const Eigen::Vector3d bV = pts[0] + V;
+        const Eigen::Vector3d bN = pts[0] + normal;
+
+        matrix(0x00) = bA.x();
+        matrix(0x01) = bU.x();
+        matrix(0x02) = bV.x();
+        matrix(0x03) = bN.x();
+
+        matrix(0x04) = bA.y();
+        matrix(0x05) = bU.y();
+        matrix(0x06) = bV.y();
+        matrix(0x07) = bN.y();
+
+        matrix(0x08) = bA.z();
+        matrix(0x09) = bU.z();
+        matrix(0x0A) = bV.z();
+        matrix(0x0B) = bN.z();
+
+        matrix(0x0C) = 1.0;
+        matrix(0x0D) = 1.0;
+        matrix(0x0E) = 1.0;
+        matrix(0x0F) = 1.0;
+
+        invmatrix = matrix.inverse();
 
         return true;
     }
@@ -71,18 +78,39 @@ bool Plane::set_actual(const std::unordered_set<const PointCmd *> &points)
             pts[idx++] = it->get_real_point();
         }
 
-        const Eigen::Vector3d u = pts[1] - pts[0];
-        const Eigen::Vector3d v = pts[2] - pts[0];
-        normal = u.cross(v).normalized();
+        const Eigen::Vector3d AB = pts[1] - pts[0];
+        const Eigen::Vector3d AC = pts[2] - pts[0];
+        normal = AB.cross(AC).normalized();
 
-        const Eigen::Vector3d unit_x = u.normalized();
-        const Eigen::Vector3d unit_y = unit_x.cross(normal);
-        matrix(0) = unit_x.x();
-        matrix(1) = unit_x.y();
-        matrix(2) = unit_x.z();
-        matrix(3) = unit_y.x();
-        matrix(4) = unit_y.y();
-        matrix(5) = unit_y.z();
+        const Eigen::Vector3d U = AB.normalized();
+        const Eigen::Vector3d V = AB.normalized().cross(normal);
+
+        const Eigen::Vector3d bA = pts[0];
+        const Eigen::Vector3d bU = pts[0] + U;
+        const Eigen::Vector3d bV = pts[0] + V;
+        const Eigen::Vector3d bN = pts[0] + normal;
+
+        matrix(0x00) = bA.x();
+        matrix(0x01) = bU.x();
+        matrix(0x02) = bV.x();
+        matrix(0x03) = bN.x();
+
+        matrix(0x04) = bA.y();
+        matrix(0x05) = bU.y();
+        matrix(0x06) = bV.y();
+        matrix(0x07) = bN.y();
+
+        matrix(0x08) = bA.z();
+        matrix(0x09) = bU.z();
+        matrix(0x0A) = bV.z();
+        matrix(0x0B) = bN.z();
+
+        matrix(0x0C) = 1.0;
+        matrix(0x0D) = 1.0;
+        matrix(0x0E) = 1.0;
+        matrix(0x0F) = 1.0;
+
+        invmatrix = matrix.inverse();
 
         return true;
     }
@@ -107,11 +135,13 @@ Eigen::Vector3d Plane::project3d(const Eigen::Vector3d &pv) const
     return pv - normal * dist;
 }
 
+#include <iostream>
 Eigen::Vector2d Plane::project2d(const Eigen::Vector3d &pv) const
 {
-    const float x = matrix(0) * pv.x() + matrix(1) * pv.y() + matrix(2) * pv.z();
-    const float y = matrix(3) * pv.x() + matrix(4) * pv.y() + matrix(5) * pv.z();
-    return Eigen::Vector2d{x, y};
+    const Eigen::Vector3d pvp = project3d(pv);
+    const Eigen::Vector4d pvx = Eigen::Vector4d{pvp.x(), pvp.y(), pvp.z(), 1.0};
+    const Eigen::Vector4d tx = matrix * pvx;
+    return Eigen::Vector2d{tx.x(), tx.y()};
 }
 
 Eigen::Vector3d Plane::unproject2d(const Eigen::Vector2d &uv) const

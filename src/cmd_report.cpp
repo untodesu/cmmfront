@@ -1,3 +1,4 @@
+#include <cmd_circle.hpp>
 #include <cmd_plane.hpp>
 #include <cmd_point.hpp>
 #include <cmd_report.hpp>
@@ -103,6 +104,23 @@ void ReportCmd::on_draw_imgui()
             const Eigen::Vector3d point_delta = Eigen::Vector3d{real_point - calc_point};
             ImGui::Text("Normal delta: %.5f %.5f %.5f (%.6f)", normal_delta.x(), normal_delta.y(), normal_delta.z(), normal_delta.norm());
             ImGui::Text("Point delta: %.5f %.5f %.5f (%.6f)", point_delta.x(), point_delta.y(), point_delta.z(), point_delta.norm());
+            return;
+        }
+
+        if(type == CmdType::MeasureCircle) {
+            const CircleCmd *circle = reinterpret_cast<const CircleCmd *>(target);
+            const Eigen::Vector3d &calc_center = circle->get_calc_point();
+            const Eigen::Vector3d &real_center = circle->get_real_point();
+            const double calc_radius = circle->get_calc_radius();
+            const double real_radius = circle->get_real_radius();
+            ImGui::Text("Guessed center: %.3f %.3f %.3f", calc_center.x(), calc_center.y(), calc_center.z());
+            ImGui::Text("Guessed radius: %.6f", calc_radius);
+            ImGui::Text("Actual center: %.3f %.3f %.3f", real_center.x(), real_center.y(), real_center.z());
+            ImGui::Text("Actual radius: %.6f", real_radius);
+            const Eigen::Vector3d center_delta = Eigen::Vector3d{real_center - calc_center};
+            const double radius_delta = abs(real_radius - calc_radius);
+            ImGui::Text("Center delta: %.5f %.5f %.5f (%.6f)", center_delta.x(), center_delta.y(), center_delta.z(), center_delta.norm());
+            ImGui::Text("Radius delta: %.6f", radius_delta);
             return;
         }
     }

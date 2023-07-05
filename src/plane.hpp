@@ -9,7 +9,6 @@ public:
     Plane() = default;
     virtual ~Plane() = default;
 
-    void set(const Eigen::Vector3d &pv, const Eigen::Vector3d &nv);
     bool set_guess(const std::unordered_set<const PointCmd *> &points);
     bool set_actual(const std::unordered_set<const PointCmd *> &points);
 
@@ -23,7 +22,8 @@ public:
 private:
     Eigen::Vector3d point {};
     Eigen::Vector3d normal {};
-    Eigen::Matrix<float, 2, 3> matrix {};
+    Eigen::Matrix4d matrix {};
+    Eigen::Matrix4d invmatrix {};
 };
 
 #endif/* BBE25704_3C2A_468C_AC2C_173A7DB169A4 */
