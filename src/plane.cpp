@@ -1,121 +1,221 @@
+#include <Eigen/Geometry>
+#include <iostream>
 #include <plane.hpp>
+
+static Eigen::Matrix4d look_at_rh(const Eigen::Vector3d &eye, const Eigen::Vector3d &center)
+{
+    const Eigen::Vector3d UP = {0.0, 1.0, 0.0};
+    const Eigen::Vector3d f = (center - eye).normalized();
+    const Eigen::Vector3d s = f.cross(UP).normalized();
+    const Eigen::Vector3d u = s.cross(f);
+
+    Eigen::Matrix4d result = Eigen::Matrix4d::Identity();
+    result.row(0) = Eigen::Vector4d{s.x(), s.y(), s.z(), 0.0};
+    result.row(1) = Eigen::Vector4d{u.x(), u.y(), u.z(), 0.0};
+    result.row(2) = Eigen::Vector4d{-f.x(), -f.y(), -f.z(), 0.0};
+    result.row(3) = Eigen::Vector4d{-s.dot(eye), -u.dot(eye), f.dot(eye), 1.0};
+
+    return result;
+}
 
 bool Plane::set_guess(const std::unordered_set<const PointCmd *> &points)
 {
-    Eigen::Vector3d pts[3];
+    constexpr static const size_t A = 0;
+    constexpr static const size_t B = 1;
+    constexpr static const size_t C = 2;
+    Eigen::Vector3d pts[3]{};
 
     point.setZero();
     normal.setZero();
+    tmatrix.setZero();
+    imatrix.setZero();
 
     if(points.size() >= 3) {
         for(auto it : points)
             point += it->get_calc_point();
         point /= static_cast<double>(points.size());
 
-        size_t idx = 0;
+        size_t index = 0;
         for(auto it : points) {
-            if(idx >= 3)
+            if(index >= 3)
                 break;
-            pts[idx++] = it->get_calc_point();
+            pts[index++] = it->get_calc_point();
         }
 
-        const Eigen::Vector3d AB = pts[1] - pts[0];
-        const Eigen::Vector3d AC = pts[2] - pts[0];
+        const Eigen::Vector3d AB = (pts[B] - pts[A]);
+        const Eigen::Vector3d AC = (pts[C] - pts[A]);
         normal = AB.cross(AC).normalized();
 
+        // Basis vectors within the plane
         const Eigen::Vector3d U = AB.normalized();
-        const Eigen::Vector3d V = AB.normalized().cross(normal);
+        const Eigen::Vector3d V = AB.normalized().cross(normal).normalized();
 
-        const Eigen::Vector3d bA = pts[0];
-        const Eigen::Vector3d bU = pts[0] + U;
-        const Eigen::Vector3d bV = pts[0] + V;
-        const Eigen::Vector3d bN = pts[0] + normal;
+        // Projection matrix that turns a 3D point
+        // into a 2D point on a plane is made from
+        // a matrix MX (columnts: U, normal, V) turned
+        // into a minor matrix MM, divided by MX's determinant.
+        Eigen::Matrix2d minor = {};
+        Eigen::Matrix3d MM = {};
+        Eigen::Matrix3d MX = {};
 
-        matrix(0x00) = bA.x();
-        matrix(0x01) = bU.x();
-        matrix(0x02) = bV.x();
-        matrix(0x03) = bN.x();
+        // M11
+        minor.row(0) = Eigen::Vector2d{normal.y(), V.y()};
+        minor.row(1) = Eigen::Vector2d{normal.z(), V.z()};
+        MM.row(0).x() = minor.determinant();
 
-        matrix(0x04) = bA.y();
-        matrix(0x05) = bU.y();
-        matrix(0x06) = bV.y();
-        matrix(0x07) = bN.y();
+        // M12
+        minor.row(0) = Eigen::Vector2d{U.y(), V.y()};
+        minor.row(1) = Eigen::Vector2d{U.z(), V.z()};
+        MM.row(0).y() = minor.determinant();
 
-        matrix(0x08) = bA.z();
-        matrix(0x09) = bU.z();
-        matrix(0x0A) = bV.z();
-        matrix(0x0B) = bN.z();
+        // M13
+        minor.row(0) = Eigen::Vector2d{U.y(), normal.y()};
+        minor.row(1) = Eigen::Vector2d{U.z(), normal.z()};
+        MM.row(0).z() = minor.determinant();
 
-        matrix(0x0C) = 1.0;
-        matrix(0x0D) = 1.0;
-        matrix(0x0E) = 1.0;
-        matrix(0x0F) = 1.0;
+        // M21
+        minor.row(0) = Eigen::Vector2d{normal.x(), V.x()};
+        minor.row(1) = Eigen::Vector2d{normal.z(), V.z()};
+        MM.row(1).x() = minor.determinant();
 
-        invmatrix = matrix.inverse();
+        // M22
+        minor.row(0) = Eigen::Vector2d{U.x(), V.x()};
+        minor.row(1) = Eigen::Vector2d{U.z(), V.z()};
+        MM.row(1).y() = minor.determinant();
 
-        return true;
+        // M23
+        minor.row(0) = Eigen::Vector2d{U.x(), normal.x()};
+        minor.row(1) = Eigen::Vector2d{U.z(), normal.z()};
+        MM.row(1).z() = minor.determinant();
+
+        // M31
+        minor.row(0) = Eigen::Vector2d{normal.x(), V.x()};
+        minor.row(1) = Eigen::Vector2d{normal.y(), V.y()};
+        MM.row(2).x() = minor.determinant();
+
+        // M32
+        minor.row(0) = Eigen::Vector2d{U.x(), V.x()};
+        minor.row(1) = Eigen::Vector2d{U.y(), V.y()};
+        MM.row(2).y() = minor.determinant();
+
+        // M33
+        minor.row(0) = Eigen::Vector2d{U.x(), normal.x()};
+        minor.row(1) = Eigen::Vector2d{U.y(), normal.y()};
+        MM.row(2).z() = minor.determinant();
+
+        // MX and its determinant
+        MX.col(0) = U;
+        MX.col(1) = normal;
+        MX.col(2) = V;
+        const double MXd = MX.determinant();
+
+        tmatrix = MM.transpose() / MXd;
+        imatrix = MX;
+
+        return false;
     }
 
-    return false;
+    return true;
 }
 
 bool Plane::set_actual(const std::unordered_set<const PointCmd *> &points)
 {
-    Eigen::Vector3d pts[3];
+    constexpr static const size_t A = 0;
+    constexpr static const size_t B = 1;
+    constexpr static const size_t C = 2;
+    Eigen::Vector3d pts[3]{};
 
     point.setZero();
     normal.setZero();
+    tmatrix.setZero();
+    imatrix.setZero();
 
     if(points.size() >= 3) {
         for(auto it : points)
             point += it->get_real_point();
         point /= static_cast<double>(points.size());
 
-        size_t idx = 0;
+        size_t index = 0;
         for(auto it : points) {
-            if(idx >= 3)
+            if(index >= 3)
                 break;
-            pts[idx++] = it->get_real_point();
+            pts[index++] = it->get_real_point();
         }
 
-        const Eigen::Vector3d AB = pts[1] - pts[0];
-        const Eigen::Vector3d AC = pts[2] - pts[0];
+        const Eigen::Vector3d AB = (pts[B] - pts[A]);
+        const Eigen::Vector3d AC = (pts[C] - pts[A]);
         normal = AB.cross(AC).normalized();
 
+        // Basis vectors within the plane
         const Eigen::Vector3d U = AB.normalized();
-        const Eigen::Vector3d V = AB.normalized().cross(normal);
+        const Eigen::Vector3d V = AB.normalized().cross(normal).normalized();
 
-        const Eigen::Vector3d bA = pts[0];
-        const Eigen::Vector3d bU = pts[0] + U;
-        const Eigen::Vector3d bV = pts[0] + V;
-        const Eigen::Vector3d bN = pts[0] + normal;
+        // Projection matrix that turns a 3D point
+        // into a 2D point on a plane is made from
+        // a matrix MX (columnts: U, normal, V) turned
+        // into a minor matrix MM, divided by MX's determinant.
+        Eigen::Matrix2d minor = {};
+        Eigen::Matrix3d MM = {};
+        Eigen::Matrix3d MX = {};
 
-        matrix(0x00) = bA.x();
-        matrix(0x01) = bU.x();
-        matrix(0x02) = bV.x();
-        matrix(0x03) = bN.x();
+        // M11
+        minor.row(0) = Eigen::Vector2d{normal.y(), V.y()};
+        minor.row(1) = Eigen::Vector2d{normal.z(), V.z()};
+        MM.row(0).x() = minor.determinant();
 
-        matrix(0x04) = bA.y();
-        matrix(0x05) = bU.y();
-        matrix(0x06) = bV.y();
-        matrix(0x07) = bN.y();
+        // M12
+        minor.row(0) = Eigen::Vector2d{U.y(), V.y()};
+        minor.row(1) = Eigen::Vector2d{U.z(), V.z()};
+        MM.row(0).y() = minor.determinant();
 
-        matrix(0x08) = bA.z();
-        matrix(0x09) = bU.z();
-        matrix(0x0A) = bV.z();
-        matrix(0x0B) = bN.z();
+        // M13
+        minor.row(0) = Eigen::Vector2d{U.y(), normal.y()};
+        minor.row(1) = Eigen::Vector2d{U.z(), normal.z()};
+        MM.row(0).z() = minor.determinant();
 
-        matrix(0x0C) = 1.0;
-        matrix(0x0D) = 1.0;
-        matrix(0x0E) = 1.0;
-        matrix(0x0F) = 1.0;
+        // M21
+        minor.row(0) = Eigen::Vector2d{normal.x(), V.x()};
+        minor.row(1) = Eigen::Vector2d{normal.z(), V.z()};
+        MM.row(1).x() = minor.determinant();
 
-        invmatrix = matrix.inverse();
+        // M22
+        minor.row(0) = Eigen::Vector2d{U.x(), V.x()};
+        minor.row(1) = Eigen::Vector2d{U.z(), V.z()};
+        MM.row(1).y() = minor.determinant();
 
-        return true;
+        // M23
+        minor.row(0) = Eigen::Vector2d{U.x(), normal.x()};
+        minor.row(1) = Eigen::Vector2d{U.z(), normal.z()};
+        MM.row(1).z() = minor.determinant();
+
+        // M31
+        minor.row(0) = Eigen::Vector2d{normal.x(), V.x()};
+        minor.row(1) = Eigen::Vector2d{normal.y(), V.y()};
+        MM.row(2).x() = minor.determinant();
+
+        // M32
+        minor.row(0) = Eigen::Vector2d{U.x(), V.x()};
+        minor.row(1) = Eigen::Vector2d{U.y(), V.y()};
+        MM.row(2).y() = minor.determinant();
+
+        // M33
+        minor.row(0) = Eigen::Vector2d{U.x(), normal.x()};
+        minor.row(1) = Eigen::Vector2d{U.y(), normal.y()};
+        MM.row(2).z() = minor.determinant();
+
+        // MX and its determinant
+        MX.col(0) = U;
+        MX.col(1) = normal;
+        MX.col(2) = V;
+        const double MXd = MX.determinant();
+
+        tmatrix = MM.transpose() / MXd;
+        imatrix = MX;
+
+        return false;
     }
 
-    return false;
+    return true;
 }
 
 const Eigen::Vector3d &Plane::get_point() const
@@ -135,16 +235,12 @@ Eigen::Vector3d Plane::project3d(const Eigen::Vector3d &pv) const
     return pv - normal * dist;
 }
 
-#include <iostream>
-Eigen::Vector2d Plane::project2d(const Eigen::Vector3d &pv) const
+Eigen::Vector3d Plane::project2d(const Eigen::Vector3d &pv) const
 {
-    const Eigen::Vector3d pvp = project3d(pv);
-    const Eigen::Vector4d pvx = Eigen::Vector4d{pvp.x(), pvp.y(), pvp.z(), 1.0};
-    const Eigen::Vector4d tx = matrix * pvx;
-    return Eigen::Vector2d{tx.x(), tx.y()};
+    return tmatrix * project3d(pv);
 }
 
-Eigen::Vector3d Plane::unproject2d(const Eigen::Vector2d &uv) const
+Eigen::Vector3d Plane::unproject2d(const Eigen::Vector3d &uv) const
 {
-    
+    return imatrix * uv;
 }

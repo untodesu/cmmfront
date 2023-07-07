@@ -158,7 +158,7 @@ bool CircleCmd::validate()
 
 void CircleCmd::solve_calc()
 {
-    Eigen::Vector2d pts[3] = {};
+    Eigen::Vector3d pts[3] = {};
 
     if(points.size() >= 3) {
         calc_plane.set_guess(points);
@@ -168,74 +168,76 @@ void CircleCmd::solve_calc()
             if(idx >= 3)
                 break;
             pts[idx] = calc_plane.project2d(it->get_calc_point());
-            std::cerr << pts[idx].x() << " " << pts[idx].y() << std::endl;
+            std::cerr << pts[idx].x() << " " << pts[idx].y() << " " << pts[idx].z() << std::endl;
             ++idx;
         }
 
         const double X12 = pts[0].x() - pts[1].x();
         const double X13 = pts[0].x() - pts[2].x();
-        const double Y12 = pts[0].y() - pts[1].y();
-        const double Y13 = pts[0].y() - pts[2].y();
-        const double Y31 = pts[2].y() - pts[0].y();
-        const double Y21 = pts[1].y() - pts[0].y();
+        const double Y12 = pts[0].z() - pts[1].z();
+        const double Y13 = pts[0].z() - pts[2].z();
+        const double Y31 = pts[2].z() - pts[0].z();
+        const double Y21 = pts[1].z() - pts[0].z();
         const double X31 = pts[2].x() - pts[0].x();
         const double X21 = pts[1].x() - pts[0].x();
 
         const double SX13 = pow(pts[0].x(), 2.0) - pow(pts[2].x(), 2.0);
-        const double SY13 = pow(pts[0].y(), 2.0) - pow(pts[2].y(), 2.0);
+        const double SY13 = pow(pts[0].z(), 2.0) - pow(pts[2].z(), 2.0);
         const double SX21 = pow(pts[1].x(), 2.0) - pow(pts[0].x(), 2.0);
-        const double SY21 = pow(pts[1].y(), 2.0) - pow(pts[0].y(), 2.0);
+        const double SY21 = pow(pts[1].z(), 2.0) - pow(pts[0].z(), 2.0);
 
         const double f = ((SX13 * X12) + (SY13 * X12) + (SX21 * X13) + (SY21 * X13)) / (2.0 * ((Y31 * X12) - (Y21 * X13)));
         const double g = ((SX13 * Y12) + (SY13 * Y12) + (SX21 * Y13) + (SY21 * Y13)) / (2.0 * ((X31 * Y12) - (X21 * Y13)));
-        const double c = -1.0 * pow(pts[0].x(), 2.0) - pow(pts[0].x(), 2.0) - 2.0 * g * pts[0].x() - 2.0 * f * pts[0].y();
+        const double c = -1.0 * pow(pts[0].x(), 2.0) - pow(pts[0].x(), 2.0) - 2.0 * g * pts[0].x() - 2.0 * f * pts[0].z();
 
         const double h = -1.0 * g;
         const double k = -1.0 * f;
         const double sq = pow(h, 2.0) + pow(k, 2.0) - c;
 
-        calc_center = calc_plane.unproject2d(Eigen::Vector2d{h, k});
-        calc_radius = sqrt(sq);
+        calc_center = calc_plane.unproject2d(Eigen::Vector3d{h, 0.0, k});
+        calc_radius = sqrt(pow(pts[0].x(), 2.0) + pow(pts[0].z(), 2.0));
     }
 }
 
 void CircleCmd::solve_real()
 {
-    Eigen::Vector2d pts[3] = {};
+    Eigen::Vector3d pts[3] = {};
 
     if(points.size() >= 3) {
-        real_plane.set_actual(points);
+        calc_plane.set_actual(points);
 
         size_t idx = 0;
         for(auto it : points) {
             if(idx >= 3)
                 break;
-            pts[idx++] = real_plane.project2d(it->get_real_point());
+            pts[idx] = calc_plane.project2d(it->get_real_point());
+            std::cerr << pts[idx].x() << " " << pts[idx].y() << " " << pts[idx].z() << std::endl;
+            ++idx;
         }
 
         const double X12 = pts[0].x() - pts[1].x();
         const double X13 = pts[0].x() - pts[2].x();
-        const double Y12 = pts[0].y() - pts[1].y();
-        const double Y13 = pts[0].y() - pts[2].y();
-        const double Y31 = pts[2].y() - pts[0].y();
-        const double Y21 = pts[1].y() - pts[0].y();
+        const double Y12 = pts[0].z() - pts[1].z();
+        const double Y13 = pts[0].z() - pts[2].z();
+        const double Y31 = pts[2].z() - pts[0].z();
+        const double Y21 = pts[1].z() - pts[0].z();
         const double X31 = pts[2].x() - pts[0].x();
         const double X21 = pts[1].x() - pts[0].x();
 
         const double SX13 = pow(pts[0].x(), 2.0) - pow(pts[2].x(), 2.0);
-        const double SY13 = pow(pts[0].y(), 2.0) - pow(pts[2].y(), 2.0);
+        const double SY13 = pow(pts[0].z(), 2.0) - pow(pts[2].z(), 2.0);
         const double SX21 = pow(pts[1].x(), 2.0) - pow(pts[0].x(), 2.0);
-        const double SY21 = pow(pts[1].y(), 2.0) - pow(pts[0].y(), 2.0);
+        const double SY21 = pow(pts[1].z(), 2.0) - pow(pts[0].z(), 2.0);
 
         const double f = ((SX13 * X12) + (SY13 * X12) + (SX21 * X13) + (SY21 * X13)) / (2.0 * ((Y31 * X12) - (Y21 * X13)));
         const double g = ((SX13 * Y12) + (SY13 * Y12) + (SX21 * Y13) + (SY21 * Y13)) / (2.0 * ((X31 * Y12) - (X21 * Y13)));
-        const double c = -1.0 * pow(pts[0].x(), 2.0) - pow(pts[0].x(), 2.0) - 2.0 * g * pts[0].x() - 2.0 * f * pts[0].y();
+        const double c = -1.0 * pow(pts[0].x(), 2.0) - pow(pts[0].x(), 2.0) - 2.0 * g * pts[0].x() - 2.0 * f * pts[0].z();
 
         const double h = -1.0 * g;
         const double k = -1.0 * f;
         const double sq = pow(h, 2.0) + pow(k, 2.0) - c;
 
-        real_center = Eigen::Vector3d{h, k, 0.0};
-        real_radius = sqrt(sq);
+        calc_center = calc_plane.unproject2d(Eigen::Vector3d{h, 0.0, k});
+        calc_radius = sqrt(pow(pts[0].x(), 2.0) + pow(pts[0].z(), 2.0));
     }
 }

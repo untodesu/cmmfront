@@ -16,14 +16,14 @@ public:
     const Eigen::Vector3d &get_normal() const;
 
     Eigen::Vector3d project3d(const Eigen::Vector3d &pv) const;
-    Eigen::Vector2d project2d(const Eigen::Vector3d &pv) const;
-    Eigen::Vector3d unproject2d(const Eigen::Vector2d &pv) const;
+    Eigen::Vector3d project2d(const Eigen::Vector3d &pv) const;
+    Eigen::Vector3d unproject2d(const Eigen::Vector3d &pv) const;
 
 private:
     Eigen::Vector3d point {};
     Eigen::Vector3d normal {};
-    Eigen::Matrix4d matrix {};
-    Eigen::Matrix4d invmatrix {};
+    Eigen::Matrix3d tmatrix {};
+    Eigen::Matrix3d imatrix {};
 };
 
 #endif/* BBE25704_3C2A_468C_AC2C_173A7DB169A4 */
