@@ -10,6 +10,7 @@ enum class PointType {
 };
 
 class PlaneCmd;
+class CircleCmd;
 class PointCmd final : public ICmd {
 public:
     PointCmd() = default;
@@ -37,6 +38,7 @@ private:
     size_t my_pcounter {0};
     PointType point_type {PointType::Generic};
     PlaneCmd *target_plane {nullptr};
+    CircleCmd *target_circle {nullptr};
 };
 
 #endif /* __SRC_CMD_POINT_HPP__ */

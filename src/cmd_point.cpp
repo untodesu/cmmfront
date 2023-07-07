@@ -1,3 +1,4 @@
+#include <cmd_circle.hpp>
 #include <cmd_point.hpp>
 #include <cmd_plane.hpp>
 #include <cmm_wrap.hpp>
@@ -58,6 +59,10 @@ void PointCmd::on_execute(ICMM *cmm)
         case PointType::PlaneProj:
             calc_point = target_plane->get_calc_plane().project3d(calc_proj_target);
             real_point = target_plane->get_real_plane().project3d(calc_proj_target);
+            break;
+        case PointType::CircleCenter:
+            calc_point = target_circle->get_calc_point();
+            real_point = target_circle->get_real_point();
             break;
     }
 }
@@ -128,6 +133,25 @@ void PointCmd::on_draw_imgui()
                         continue;
                     target_plane = pcmd;
                     calc_point = target_plane->get_calc_plane().project3d(calc_proj_target);
+                    real_point = Eigen::Vector3d{};
+                }
+            }
+
+            ImGui::ListBoxFooter();
+        }
+    }
+
+    if(point_type == PointType::CircleCenter) {
+        if(ImGui::ListBoxHeader("Circle")) {
+            for(auto it : globals::commands) {
+                if(it->get_pcounter() < my_pcounter && it->get_type() == CmdType::MeasurePlane) {
+                    CircleCmd *ccmd = reinterpret_cast<CircleCmd *>(it);
+                    bool selected = (target_circle == ccmd);
+                    snprintf(stager, sizeof(stager), "%s [%04zX]", it->get_name().c_str(), it->get_pcounter());
+                    if(!ImGui::Selectable(stager, &selected))
+                        continue;
+                    target_circle = ccmd;
+                    calc_point = target_circle->get_calc_point();
                     real_point = Eigen::Vector3d{};
                 }
             }

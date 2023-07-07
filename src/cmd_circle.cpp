@@ -204,13 +204,14 @@ void CircleCmd::solve_real()
     Eigen::Vector3d pts[3] = {};
 
     if(points.size() >= 3) {
-        calc_plane.set_actual(points);
+        // Нихрена себе, реальный самолет!
+        real_plane.set_actual(points);
 
         size_t idx = 0;
         for(auto it : points) {
             if(idx >= 3)
                 break;
-            pts[idx] = calc_plane.project2d(it->get_real_point());
+            pts[idx] = real_plane.project2d(it->get_real_point());
             std::cerr << pts[idx].x() << " " << pts[idx].y() << " " << pts[idx].z() << std::endl;
             ++idx;
         }
@@ -237,7 +238,7 @@ void CircleCmd::solve_real()
         const double k = -1.0 * f;
         const double sq = pow(h, 2.0) + pow(k, 2.0) - c;
 
-        calc_center = calc_plane.unproject2d(Eigen::Vector3d{h, 0.0, k});
-        calc_radius = sqrt(pow(pts[0].x(), 2.0) + pow(pts[0].z(), 2.0));
+        real_center = real_plane.unproject2d(Eigen::Vector3d{h, 0.0, k});
+        real_radius = sqrt(pow(pts[0].x(), 2.0) + pow(pts[0].z(), 2.0));
     }
 }
