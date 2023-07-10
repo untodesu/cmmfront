@@ -99,6 +99,7 @@ void CircleCmd::on_draw_imgui()
                         continue;
                     points.insert(pit);
                     solve_calc();
+                    real_center.setZero();
                 }
             }
         }
@@ -111,6 +112,7 @@ void CircleCmd::on_draw_imgui()
             if((*it)->get_pcounter() > my_pcounter) {
                 it = points.erase(it);
                 solve_calc();
+                real_center.setZero();
                 if(it != points.end())
                     continue;
                 break;
@@ -121,6 +123,7 @@ void CircleCmd::on_draw_imgui()
                 continue;
             it = points.erase(it);
             solve_calc();
+            real_center.setZero();
 
             // YIKES!
             if(it != points.end())
@@ -158,18 +161,18 @@ bool CircleCmd::validate()
 
 void CircleCmd::solve_calc()
 {
-    Eigen::Vector3d pts[3] = {};
+    std::vector<Eigen::Vector3d> pts = {};
+
+    // Reset things
+    calc_center.setZero();
+    calc_radius = double{0.0};
 
     if(points.size() >= 3) {
         calc_plane.set_guess(points);
 
-        size_t idx = 0;
         for(auto it : points) {
-            if(idx >= 3)
-                break;
-            pts[idx] = calc_plane.project2d(it->get_calc_point());
-            std::cerr << pts[idx].x() << " " << pts[idx].y() << " " << pts[idx].z() << std::endl;
-            ++idx;
+            // Project every single point onto the plane
+            pts.push_back(calc_plane.project2d(it->get_calc_point()));
         }
 
         const double X12 = pts[0].x() - pts[1].x();
@@ -190,30 +193,30 @@ void CircleCmd::solve_calc()
         const double g = ((SX13 * Y12) + (SY13 * Y12) + (SX21 * Y13) + (SY21 * Y13)) / (2.0 * ((X31 * Y12) - (X21 * Y13)));
         const double c = -1.0 * pow(pts[0].x(), 2.0) - pow(pts[0].x(), 2.0) - 2.0 * g * pts[0].x() - 2.0 * f * pts[0].z();
 
-        const double h = -1.0 * g;
-        const double k = -1.0 * f;
-        const double sq = pow(h, 2.0) + pow(k, 2.0) - c;
+        // Circle's center
+        const Eigen::Vector3d center = {-g, 0.0, -f};
+        calc_center = calc_plane.unproject2d(center);
 
-        calc_center = calc_plane.unproject2d(Eigen::Vector3d{h, 0.0, k});
-        calc_radius = sqrt(pow(pts[0].x(), 2.0) + pow(pts[0].z(), 2.0));
+        for(auto it : pts) {
+            const Eigen::Vector3d point = it - center;
+            calc_radius += sqrt(pow(point.x(), 2.0) + pow(point.z(), 2.0));
+        }
+
+        calc_radius /= static_cast<double>(pts.size());
     }
 }
 
 void CircleCmd::solve_real()
 {
-    Eigen::Vector3d pts[3] = {};
+    std::vector<Eigen::Vector3d> pts = {};
 
     if(points.size() >= 3) {
         // Нихрена себе, реальный самолет!
         real_plane.set_actual(points);
 
-        size_t idx = 0;
         for(auto it : points) {
-            if(idx >= 3)
-                break;
-            pts[idx] = real_plane.project2d(it->get_real_point());
-            std::cerr << pts[idx].x() << " " << pts[idx].y() << " " << pts[idx].z() << std::endl;
-            ++idx;
+            // Project every single point onto the plane
+            pts.push_back(real_plane.project2d(it->get_real_point()));
         }
 
         const double X12 = pts[0].x() - pts[1].x();
@@ -234,11 +237,15 @@ void CircleCmd::solve_real()
         const double g = ((SX13 * Y12) + (SY13 * Y12) + (SX21 * Y13) + (SY21 * Y13)) / (2.0 * ((X31 * Y12) - (X21 * Y13)));
         const double c = -1.0 * pow(pts[0].x(), 2.0) - pow(pts[0].x(), 2.0) - 2.0 * g * pts[0].x() - 2.0 * f * pts[0].z();
 
-        const double h = -1.0 * g;
-        const double k = -1.0 * f;
-        const double sq = pow(h, 2.0) + pow(k, 2.0) - c;
+        // Circle's center
+        const Eigen::Vector3d center = {-g, 0.0, -f};
+        real_center = real_plane.unproject2d(center);
 
-        real_center = real_plane.unproject2d(Eigen::Vector3d{h, 0.0, k});
-        real_radius = sqrt(pow(pts[0].x(), 2.0) + pow(pts[0].z(), 2.0));
+        for(auto it : pts) {
+            const Eigen::Vector3d point = it - center;
+            real_radius += sqrt(pow(point.x(), 2.0) + pow(point.z(), 2.0));
+        }
+
+        real_radius /= static_cast<double>(pts.size());
     }
 }

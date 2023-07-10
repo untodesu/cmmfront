@@ -144,7 +144,7 @@ void PointCmd::on_draw_imgui()
     if(point_type == PointType::CircleCenter) {
         if(ImGui::ListBoxHeader("Circle")) {
             for(auto it : globals::commands) {
-                if(it->get_pcounter() < my_pcounter && it->get_type() == CmdType::MeasurePlane) {
+                if(it->get_pcounter() < my_pcounter && it->get_type() == CmdType::MeasureCircle) {
                     CircleCmd *ccmd = reinterpret_cast<CircleCmd *>(it);
                     bool selected = (target_circle == ccmd);
                     snprintf(stager, sizeof(stager), "%s [%04zX]", it->get_name().c_str(), it->get_pcounter());
@@ -179,6 +179,22 @@ bool PointCmd::validate()
         }
 
         // No planes?
+        return false;
+    }
+
+    if(point_type == PointType::CircleCenter) {
+        if(target_circle) {
+            for(auto it : globals::commands) {
+                if(it != target_circle)
+                    continue;
+                return true;
+            }
+
+            // Invalid pointer
+            return false;
+        }
+
+        // No circles?
         return false;
     }
 
