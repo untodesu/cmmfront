@@ -171,38 +171,31 @@ void CircleCmd::solve_calc()
         calc_plane.set_guess(points);
 
         for(auto it : points) {
-            // Project every single point onto the plane
-            pts.push_back(calc_plane.project2d(it->get_calc_point()));
+            const Eigen::Vector3d &point = it->get_calc_point();
+            const Eigen::Vector3d pv = calc_plane.project2d(point);
+            pts.push_back(pv);
         }
 
-        const double X12 = pts[0].x() - pts[1].x();
-        const double X13 = pts[0].x() - pts[2].x();
-        const double Y12 = pts[0].z() - pts[1].z();
-        const double Y13 = pts[0].z() - pts[2].z();
-        const double Y31 = pts[2].z() - pts[0].z();
-        const double Y21 = pts[1].z() - pts[0].z();
-        const double X31 = pts[2].x() - pts[0].x();
-        const double X21 = pts[1].x() - pts[0].x();
+        const Eigen::Vector3d AB {pts[1] - pts[0]};
+        const Eigen::Vector3d AC {pts[2] - pts[0]};
+        const Eigen::Vector3d BC {pts[2] - pts[1]};
 
-        const double SX13 = pow(pts[0].x(), 2.0) - pow(pts[2].x(), 2.0);
-        const double SY13 = pow(pts[0].z(), 2.0) - pow(pts[2].z(), 2.0);
-        const double SX21 = pow(pts[1].x(), 2.0) - pow(pts[0].x(), 2.0);
-        const double SY21 = pow(pts[1].z(), 2.0) - pow(pts[0].z(), 2.0);
+        const double LAB = AB.norm();
+        const double LAC = AC.norm();
+        const double LBC = BC.norm();
 
-        const double f = ((SX13 * X12) + (SY13 * X12) + (SX21 * X13) + (SY21 * X13)) / (2.0 * ((Y31 * X12) - (Y21 * X13)));
-        const double g = ((SX13 * Y12) + (SY13 * Y12) + (SX21 * Y13) + (SY21 * Y13)) / (2.0 * ((X31 * Y12) - (X21 * Y13)));
-        const double c = -1.0 * pow(pts[0].x(), 2.0) - pow(pts[0].x(), 2.0) - 2.0 * g * pts[0].x() - 2.0 * f * pts[0].z();
+        const double halfp = 0.5 * (LAB + LAC + LBC);
+        const double area = sqrt(halfp * (halfp - LAB) * (halfp - LAC) * (halfp - LBC));
 
-        // Circle's center
-        const Eigen::Vector3d center = {-g, 0.0, -f};
-        calc_center = calc_plane.unproject2d(center);
+        calc_radius = (LAB * LAC * LBC) / (4.0 * area);
 
-        for(auto it : pts) {
-            const Eigen::Vector3d point = it - center;
-            calc_radius += sqrt(pow(point.x(), 2.0) + pow(point.z(), 2.0));
-        }
+        const double E = AB.x() * (pts[0].x() + pts[1].x()) + AB.z() * (pts[0].z() + pts[1].z());
+        const double F = AC.x() * (pts[0].x() + pts[2].x()) + AC.z() * (pts[0].z() + pts[2].z());
+        const double g = 2.0 * (AB.x() * BC.z() - AB.z() * BC.x());
+        const double cx = (AC.z() * E - AB.z() * F) / g;
+        const double cz = (AB.x() * F - AC.x() * E) / g;
 
-        calc_radius /= static_cast<double>(pts.size());
+        calc_center = calc_plane.unproject2d(Eigen::Vector3d{cx, pts[0].y(), cz});
     }
 }
 
@@ -212,40 +205,33 @@ void CircleCmd::solve_real()
 
     if(points.size() >= 3) {
         // Нихрена себе, реальный самолет!
-        real_plane.set_actual(points);
+        real_plane.set_guess(points);
 
         for(auto it : points) {
-            // Project every single point onto the plane
-            pts.push_back(real_plane.project2d(it->get_real_point()));
+            const Eigen::Vector3d &point = it->get_real_point();
+            const Eigen::Vector3d pv = real_plane.project2d(point);
+            pts.push_back(pv);
         }
 
-        const double X12 = pts[0].x() - pts[1].x();
-        const double X13 = pts[0].x() - pts[2].x();
-        const double Y12 = pts[0].z() - pts[1].z();
-        const double Y13 = pts[0].z() - pts[2].z();
-        const double Y31 = pts[2].z() - pts[0].z();
-        const double Y21 = pts[1].z() - pts[0].z();
-        const double X31 = pts[2].x() - pts[0].x();
-        const double X21 = pts[1].x() - pts[0].x();
+        const Eigen::Vector3d AB {pts[1] - pts[0]};
+        const Eigen::Vector3d AC {pts[2] - pts[0]};
+        const Eigen::Vector3d BC {pts[2] - pts[1]};
 
-        const double SX13 = pow(pts[0].x(), 2.0) - pow(pts[2].x(), 2.0);
-        const double SY13 = pow(pts[0].z(), 2.0) - pow(pts[2].z(), 2.0);
-        const double SX21 = pow(pts[1].x(), 2.0) - pow(pts[0].x(), 2.0);
-        const double SY21 = pow(pts[1].z(), 2.0) - pow(pts[0].z(), 2.0);
+        const double LAB = AB.norm();
+        const double LAC = AC.norm();
+        const double LBC = BC.norm();
 
-        const double f = ((SX13 * X12) + (SY13 * X12) + (SX21 * X13) + (SY21 * X13)) / (2.0 * ((Y31 * X12) - (Y21 * X13)));
-        const double g = ((SX13 * Y12) + (SY13 * Y12) + (SX21 * Y13) + (SY21 * Y13)) / (2.0 * ((X31 * Y12) - (X21 * Y13)));
-        const double c = -1.0 * pow(pts[0].x(), 2.0) - pow(pts[0].x(), 2.0) - 2.0 * g * pts[0].x() - 2.0 * f * pts[0].z();
+        const double halfp = 0.5 * (LAB + LAC + LBC);
+        const double area = sqrt(halfp * (halfp - LAB) * (halfp - LAC) * (halfp - LBC));
 
-        // Circle's center
-        const Eigen::Vector3d center = {-g, 0.0, -f};
-        real_center = real_plane.unproject2d(center);
+        real_radius = (LAB * LAC * LBC) / (4.0 * area);
 
-        for(auto it : pts) {
-            const Eigen::Vector3d point = it - center;
-            real_radius += sqrt(pow(point.x(), 2.0) + pow(point.z(), 2.0));
-        }
+        const double E = AB.x() * (pts[0].x() + pts[1].x()) + AB.z() * (pts[0].z() + pts[1].z());
+        const double F = AC.x() * (pts[0].x() + pts[2].x()) + AC.z() * (pts[0].z() + pts[2].z());
+        const double g = 2.0 * (AB.x() * BC.z() - AB.z() * BC.x());
+        const double cx = (AC.z() * E - AB.z() * F) / g;
+        const double cz = (AB.x() * F - AC.x() * E) / g;
 
-        real_radius /= static_cast<double>(pts.size());
+        real_center = real_plane.unproject2d(Eigen::Vector3d{cx, pts[0].y(), cz});
     }
 }
