@@ -23,6 +23,11 @@ const Eigen::Vector3d &PointCmd::get_calc_point() const
     return calc_point;
 }
 
+const Eigen::Vector3d &PointCmd::get_real_normal() const
+{
+    return real_normal;
+}
+
 const Eigen::Vector3d &PointCmd::get_real_point() const
 {
     return real_point;
@@ -55,14 +60,19 @@ void PointCmd::on_execute(ICMM *cmm)
     switch(point_type) {
         case PointType::Generic:
             cmm->cmd_point(calc_point, calc_normal, real_point);
+            real_normal = calc_normal;
             break;
         case PointType::PlaneProj:
             calc_point = target_plane->get_calc_plane().project3d(calc_proj_target);
+            calc_normal = target_plane->get_calc_plane().get_normal();
             real_point = target_plane->get_real_plane().project3d(calc_proj_target);
+            real_normal = target_plane->get_real_plane().get_normal();
             break;
         case PointType::CircleCenter:
             calc_point = target_circle->get_calc_point();
+            calc_normal = target_circle->get_calc_plane().get_normal();
             real_point = target_circle->get_real_point();
+            real_normal = target_circle->get_real_plane().get_normal();
             break;
     }
 }

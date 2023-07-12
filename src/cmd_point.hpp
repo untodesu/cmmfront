@@ -19,6 +19,7 @@ public:
     void set_name(const std::string &name);
     const Eigen::Vector3d &get_calc_normal() const;
     const Eigen::Vector3d &get_calc_point() const;
+    const Eigen::Vector3d &get_real_normal() const;
     const Eigen::Vector3d &get_real_point() const;
 
     virtual CmdType get_type() const override;
@@ -33,6 +34,7 @@ private:
     std::string name {};
     Eigen::Vector3d calc_normal {};
     Eigen::Vector3d calc_point {};
+    Eigen::Vector3d real_normal {};
     Eigen::Vector3d real_point {};
     Eigen::Vector3d calc_proj_target {};
     size_t my_pcounter {0};

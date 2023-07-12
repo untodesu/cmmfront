@@ -81,12 +81,16 @@ void ReportCmd::on_draw_imgui()
             const PointCmd *point = reinterpret_cast<const PointCmd *>(target);
             const Eigen::Vector3d calc_normal = point->get_calc_normal();
             const Eigen::Vector3d calc_point = point->get_calc_point();
+            const Eigen::Vector3d real_normal = point->get_real_normal();
             const Eigen::Vector3d real_point = point->get_real_point();
             ImGui::Text("Guessed Normal: %.3f %.3f %.3f", calc_normal.x(), calc_normal.y(), calc_normal.z());
             ImGui::Text("Guessed Point: %.3f %.3f %.3f", calc_point.x(), calc_point.y(), calc_point.z());
-            ImGui::Text("Actual Pointn: %.3f %.3f %.3f", real_point.x(), real_point.y(), real_point.z());
-            const Eigen::Vector3d delta = Eigen::Vector3d{real_point - calc_point};
-            ImGui::Text("Position delta: %.5f %.5f %.5f (%.5f)", delta.x(), delta.y(), delta.z(), delta.norm());
+            ImGui::Text("Actual Normal: %.3f %.3f %.3f", real_normal.x(), real_normal.y(), real_normal.z());
+            ImGui::Text("Actual Point: %.3f %.3f %.3f", real_point.x(), real_point.y(), real_point.z());
+            const Eigen::Vector3d ndelta = Eigen::Vector3d{real_normal - calc_normal};
+            const Eigen::Vector3d pdelta = Eigen::Vector3d{real_point - calc_point};
+            ImGui::Text("Normal delta: %.5f %.5f %.5f", ndelta.x(), ndelta.y(), ndelta.z());
+            ImGui::Text("Position delta: %.5f %.5f %.5f (%.5f)", pdelta.x(), pdelta.y(), pdelta.z(), pdelta.norm());
             return;
         }
 
@@ -102,7 +106,7 @@ void ReportCmd::on_draw_imgui()
             ImGui::Text("Actual Point: %.3f %.3f %.3f", real_point.x(), real_point.y(), real_point.z());
             const Eigen::Vector3d normal_delta = Eigen::Vector3d{real_normal - calc_normal};
             const Eigen::Vector3d point_delta = Eigen::Vector3d{real_point - calc_point};
-            ImGui::Text("Normal delta: %.5f %.5f %.5f (%.6f)", normal_delta.x(), normal_delta.y(), normal_delta.z(), normal_delta.norm());
+            ImGui::Text("Normal delta: %.5f %.5f %.5f", normal_delta.x(), normal_delta.y(), normal_delta.z());
             ImGui::Text("Point delta: %.5f %.5f %.5f (%.6f)", point_delta.x(), point_delta.y(), point_delta.z(), point_delta.norm());
             return;
         }
