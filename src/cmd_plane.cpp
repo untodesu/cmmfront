@@ -138,3 +138,13 @@ bool PlaneCmd::validate()
     // Not enough points
     return false;
 }
+
+void PlaneCmd::json_import(const rapidjson::Document &json, size_t pcounter)
+{
+
+}
+
+void PlaneCmd::json_export(rapidjson::Document &json, size_t pcounter) const
+{
+
+}

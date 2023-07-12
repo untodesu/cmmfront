@@ -153,3 +153,13 @@ bool ReportCmd::validate()
     // No target
     return false;
 }
+
+void ReportCmd::json_import(const rapidjson::Document &json, size_t pcounter)
+{
+
+}
+
+void ReportCmd::json_export(rapidjson::Document &json, size_t pcounter) const
+{
+
+}

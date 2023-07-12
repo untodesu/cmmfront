@@ -56,3 +56,13 @@ bool CommentCmd::validate()
 {
     return true;
 }
+
+void CommentCmd::json_import(const rapidjson::Document &json, size_t pcounter)
+{
+
+}
+
+void CommentCmd::json_export(rapidjson::Document &json, size_t pcounter) const
+{
+
+}

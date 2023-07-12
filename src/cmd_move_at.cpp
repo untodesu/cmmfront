@@ -48,3 +48,13 @@ bool MoveCmd::validate()
 {
     return true;
 }
+
+void MoveCmd::json_import(const rapidjson::Document &json, size_t pcounter)
+{
+
+}
+
+void MoveCmd::json_export(rapidjson::Document &json, size_t pcounter) const
+{
+
+}
