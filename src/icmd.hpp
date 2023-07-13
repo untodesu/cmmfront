@@ -1,8 +1,8 @@
 #ifndef BB4D5ADF_60E9_4A8E_9A70_49C1D7972980
 #define BB4D5ADF_60E9_4A8E_9A70_49C1D7972980
-#include <rapidjson/document.h>
 #include <icmm.hpp>
 #include <string>
+#include <fstream>
 
 enum class CmdType {
     Comment,
@@ -23,8 +23,8 @@ public:
     virtual void on_execute(ICMM *cmm) = 0;
     virtual void on_draw_imgui() = 0;
     virtual bool validate() = 0;
-    virtual void json_import(const rapidjson::Document &json, size_t pcounter) = 0;
-    virtual void json_export(rapidjson::Document &json, size_t pcounter) const = 0;
+    virtual void on_load(std::ifstream &file) = 0;
+    virtual void on_save(std::ofstream &file) const = 0;
 };
 
 #endif/* BB4D5ADF_60E9_4A8E_9A70_49C1D7972980 */

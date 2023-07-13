@@ -211,12 +211,117 @@ bool PointCmd::validate()
     return true;
 }
 
-void PointCmd::json_import(const rapidjson::Document &json, size_t pcounter)
+void PointCmd::on_load(std::ifstream &file)
 {
+    size_t offset;
+    std::string line {};
 
+    while(std::getline(file, line)) {
+        if((offset = line.find("name")) != std::string::npos) {
+            name = line.substr(offset + 4);
+            continue;
+        }
+
+        if((offset = line.find("pcounter")) != std::string::npos) {
+            my_pcounter = static_cast<size_t>(strtoull(line.substr(offset + 8).c_str(), nullptr, 10));
+            continue;
+        }
+
+        if((offset = line.find("ptarget")) != std::string::npos) {
+            const size_t pc = static_cast<size_t>(strtoull(line.substr(offset + 7).c_str(), nullptr, 10));
+
+            for(auto it : globals::commands) {
+                if(it->get_pcounter() == pc && it->get_type() == CmdType::MeasurePlane) {
+                    target_plane = reinterpret_cast<PlaneCmd *>(it);
+                    break;
+                }
+            }
+
+            point_type = PointType::PlaneProj;
+
+            continue;
+        }
+
+        if((offset = line.find("ctarget")) != std::string::npos) {
+            const size_t pc = static_cast<size_t>(strtoull(line.substr(offset + 7).c_str(), nullptr, 10));
+
+            for(auto it : globals::commands) {
+                if(it->get_pcounter() == pc && it->get_type() == CmdType::MeasureCircle) {
+                    target_circle = reinterpret_cast<CircleCmd *>(it);
+                    break;
+                }
+            }
+
+            point_type = PointType::CircleCenter;
+
+            continue;
+        }
+
+        if((offset = line.find("px")) != std::string::npos) {
+            calc_point.x() = atof(line.substr(offset + 2).c_str());
+            point_type = PointType::Generic;
+            continue;
+        }
+
+        if((offset = line.find("py")) != std::string::npos) {
+            calc_point.y() = atof(line.substr(offset + 2).c_str());
+            point_type = PointType::Generic;
+            continue;
+        }
+
+        if((offset = line.find("pz")) != std::string::npos) {
+            calc_point.z() = atof(line.substr(offset + 2).c_str());
+            point_type = PointType::Generic;
+            continue;
+        }
+
+        if((offset = line.find("nx")) != std::string::npos) {
+            calc_normal.x() = atof(line.substr(offset + 2).c_str());
+            point_type = PointType::Generic;
+            continue;
+        }
+
+        if((offset = line.find("ny")) != std::string::npos) {
+            calc_normal.y() = atof(line.substr(offset + 2).c_str());
+            point_type = PointType::Generic;
+            continue;
+        }
+
+        if((offset = line.find("nz")) != std::string::npos) {
+            calc_normal.z() = atof(line.substr(offset + 2).c_str());
+            point_type = PointType::Generic;
+            continue;
+        }
+
+        if(line.find("end") != std::string::npos) {
+            break;
+        }
+    }
 }
 
-void PointCmd::json_export(rapidjson::Document &json, size_t pcounter) const
+void PointCmd::on_save(std::ofstream &file) const
 {
-
+    file << "point" << std::endl;
+    if(!name.empty())
+        file << "name" << name << std::endl;
+    file << "pcounter" << my_pcounter << std::endl;
+    switch(point_type) {
+        case PointType::Generic:
+            file << "px" << calc_point.x() << std::endl;
+            file << "py" << calc_point.y() << std::endl;
+            file << "pz" << calc_point.z() << std::endl;
+            file << "nx" << calc_normal.x() << std::endl;
+            file << "ny" << calc_normal.y() << std::endl;
+            file << "nz" << calc_normal.z() << std::endl;
+            break;
+        case PointType::PlaneProj:
+            if(target_plane)
+                file << "ptarget" << target_plane->get_pcounter() << std::endl;
+            break;
+        case PointType::CircleCenter:
+            if(target_circle)
+                file << "ctarget" << target_circle->get_pcounter() << std::endl;
+            break;
+    }
+    file << "end" << std::endl;
 }

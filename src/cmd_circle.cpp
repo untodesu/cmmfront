@@ -236,57 +236,51 @@ void CircleCmd::solve_real()
     }
 }
 
-void CircleCmd::json_import(const rapidjson::Document &json, size_t pcounter)
+void CircleCmd::on_load(std::ifstream &file)
 {
-    const auto arr = json.GetArray();
+    size_t offset;
+    std::string line {};
 
-    if(arr.Size() > pcounter) {
-        const auto &me = arr[pcounter];
-        const auto meobj = me.GetObject();
+    while(std::getline(file, line)) {
+        if((offset = line.find("name")) != std::string::npos) {
+            name = line.substr(offset + 4);
+            continue;
+        }
 
-        const auto jname = meobj.FindMember("name");
-        if(jname != meobj.MemberEnd() && jname->value.IsString())
-            name = std::string{jname->value.GetString()};
-        my_pcounter = pcounter;
-    
-        const auto jpoints = meobj.FindMember("points");
-        if(jpoints != meobj.MemberEnd() && jpoints->value.IsArray()) {
-            const auto jparr = jpoints->value.GetArray();
-            for(auto it = jparr.Begin(); it != jparr.End(); ++it) {
-                if(it->IsNumber()) {
-                    const size_t it_pc = static_cast<size_t>(it->GetUint64());
-                    if(it_pc < my_pcounter) {
-                        for(const auto itc : globals::commands) {
-                            if(itc->get_type() != CmdType::MeasurePoint)
-                                continue;
-                            if(itc->get_pcounter() != it_pc)
-                                continue;
-                            points.insert(reinterpret_cast<const PointCmd *>(itc));
-                        }
+        if((offset = line.find("pcounter")) != std::string::npos) {
+            my_pcounter = static_cast<size_t>(strtoull(line.substr(offset + 8).c_str(), nullptr, 10));
+            continue;
+        }
+
+        if((offset = line.find("point")) != std::string::npos) {
+            const size_t pc = static_cast<size_t>(strtoull(line.substr(offset + 5).c_str(), nullptr, 10));
+
+            if(pc < my_pcounter) {
+                for(const auto it : globals::commands) {
+                    if(it->get_pcounter() == pc && it->get_type() == CmdType::MeasurePoint) {
+                        points.insert(reinterpret_cast<const PointCmd *>(it));
                     }
                 }
             }
+
+            continue;
+        }
+
+        if(line.find("end") != std::string::npos) {
+            break;
         }
     }
+
+    solve_calc();
 }
 
-void CircleCmd::json_export(rapidjson::Document &json, size_t pcounter) const
+void CircleCmd::on_save(std::ofstream &file) const
 {
-    const auto arr = json.GetArray();
-
-    rapidjson::Value val = {};
-    val.SetObject();
-
-    auto &jname = val["name"];
-    jname.SetString(name.c_str(), name.length());
-
-    auto &jpoints = val["points"];
-    jpoints.SetArray();
-    for(const auto it : points) {
-        rapidjson::Value itv = {};
-        itv.SetUint64(static_cast<uint64_t>(it->get_pcounter()));
-        jpoints.PushBack(itv, json.GetAllocator());
-    }
-
-    arr.PushBack(val, json.GetAllocator());
+    file << "circle" << std::endl;
+    if(!name.empty())
+        file << "name" << name << std::endl;
+    file << "pcounter" << my_pcounter << std::endl;
+    for(const auto it : points)
+        file << "point" << it->get_pcounter() << std::endl;
+    file << "end" << std::endl;
 }

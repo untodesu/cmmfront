@@ -17,7 +17,7 @@ set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
 add_subdirectory(eigen)
 add_subdirectory(glad)
 add_subdirectory(glfw)
-add_subdirectory(rapidjson)
+add_subdirectory(pfd)
 
 add_executable(cmmfront
     "${CMAKE_CURRENT_LIST_DIR}/imgui/imgui_draw.cpp"
@@ -42,4 +42,4 @@ add_executable(cmmfront
 target_include_directories(cmmfront PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/imgui"
     "${CMAKE_CURRENT_LIST_DIR}/src")
-target_link_libraries(cmmfront PRIVATE eigen glad glfw rapidjson)
+target_link_libraries(cmmfront PRIVATE eigen glad glfw pfd)

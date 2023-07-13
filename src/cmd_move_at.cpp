@@ -49,12 +49,44 @@ bool MoveCmd::validate()
     return true;
 }
 
-void MoveCmd::json_import(const rapidjson::Document &json, size_t pcounter)
+void MoveCmd::on_load(std::ifstream &file)
 {
+    size_t offset;
+    std::string line {};
 
+    while(std::getline(file, line)) {
+        if((offset = line.find("pcounter")) != std::string::npos) {
+            my_pcounter = static_cast<size_t>(strtoull(line.substr(offset + 8).c_str(), nullptr, 10));
+            continue;
+        }
+
+        if((offset = line.find("x")) != std::string::npos) {
+            position.x() = atof(line.substr(offset + 1).c_str());
+            continue;
+        }
+
+        if((offset = line.find("y")) != std::string::npos) {
+            position.y() = atof(line.substr(offset + 1).c_str());
+            continue;
+        }
+
+        if((offset = line.find("z")) != std::string::npos) {
+            position.z() = atof(line.substr(offset + 1).c_str());
+            continue;
+        }
+
+        if(line.find("end") != std::string::npos) {
+            break;
+        }
+    }
 }
 
-void MoveCmd::json_export(rapidjson::Document &json, size_t pcounter) const
+void MoveCmd::on_save(std::ofstream &file) const
 {
-
+    file << "move" << std::endl;
+    file << "pcounter" << my_pcounter << std::endl;
+    file << "x" << position.x() << std::endl;
+    file << "y" << position.y() << std::endl;
+    file << "z" << position.z() << std::endl;
+    file << "end" << std::endl;
 }

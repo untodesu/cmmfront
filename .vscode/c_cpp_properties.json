@@ -12,7 +12,7 @@
                 "${workspaceFolder}/glad/include",
                 "${workspaceFolder}/glfw/include",
                 "${workspaceFolder}/imgui",
-                "${workspaceFolder}/rapidjson/include",
+                "${workspaceFolder}/pfd/include",
                 "${workspaceFolder}/src",
                 "${default}"
             ]

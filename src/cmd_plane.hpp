@@ -20,8 +20,8 @@ public:
     virtual void on_execute(ICMM *cmm) override;
     virtual void on_draw_imgui() override;
     virtual bool validate() override;
-    virtual void json_import(const rapidjson::Document &json, size_t pcounter) override;
-    virtual void json_export(rapidjson::Document &json, size_t pcounter) const override;
+    virtual void on_load(std::ifstream &file) override;
+    virtual void on_save(std::ofstream &file) const override;
 
 private:
     std::string name {};

@@ -4,6 +4,7 @@
 #include <imgui.h>
 #include <imgui_stdlib.h>
 #include <iostream>
+#include <sstream>
 
 CmdType CommentCmd::get_type() const
 {
@@ -57,12 +58,36 @@ bool CommentCmd::validate()
     return true;
 }
 
-void CommentCmd::json_import(const rapidjson::Document &json, size_t pcounter)
+void CommentCmd::on_load(std::ifstream &file)
 {
+    size_t offset;
+    std::string line {};
 
+    while(std::getline(file, line)) {
+        if((offset = line.find("pcounter")) != std::string::npos) {
+            my_pcounter = static_cast<size_t>(strtoull(line.substr(offset + 8).c_str(), nullptr, 10));
+            continue;
+        }
+
+        if((offset = line.find("text")) != std::string::npos) {
+            comment_text += line.substr(offset + 4);
+            comment_text += "\n";
+            continue;
+        }
+
+        if(line.find("end") != std::string::npos) {
+            break;
+        }
+    }
 }
 
-void CommentCmd::json_export(rapidjson::Document &json, size_t pcounter) const
+void CommentCmd::on_save(std::ofstream &file) const
 {
-
+    std::string line {};
+    std::istringstream ss {comment_text};
+    file << "comment" << std::endl;
+    file << "pcounter" << my_pcounter << std::endl;
+    while(std::getline(ss, line))
+        file << "text" << line << std::endl;
+    file << "end" << std::endl;
 }

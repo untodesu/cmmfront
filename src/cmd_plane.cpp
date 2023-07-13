@@ -139,12 +139,51 @@ bool PlaneCmd::validate()
     return false;
 }
 
-void PlaneCmd::json_import(const rapidjson::Document &json, size_t pcounter)
+void PlaneCmd::on_load(std::ifstream &file)
 {
+    size_t offset;
+    std::string line {};
 
+    while(std::getline(file, line)) {
+        if((offset = line.find("name")) != std::string::npos) {
+            name = line.substr(offset + 4);
+            continue;
+        }
+
+        if((offset = line.find("pcounter")) != std::string::npos) {
+            my_pcounter = static_cast<size_t>(strtoull(line.substr(offset + 8).c_str(), nullptr, 10));
+            continue;
+        }
+
+        if((offset = line.find("point")) != std::string::npos) {
+            const size_t pc = static_cast<size_t>(strtoull(line.substr(offset + 5).c_str(), nullptr, 10));
+
+            if(pc < my_pcounter) {
+                for(const auto it : globals::commands) {
+                    if(it->get_pcounter() == pc && it->get_type() == CmdType::MeasurePoint) {
+                        points.insert(reinterpret_cast<const PointCmd *>(it));
+                    }
+                }
+            }
+
+            continue;
+        }
+
+        if(line.find("end") != std::string::npos) {
+            break;
+        }
+    }
+
+    calc_plane.set_guess(points);
 }
 
-void PlaneCmd::json_export(rapidjson::Document &json, size_t pcounter) const
+void PlaneCmd::on_save(std::ofstream &file) const
 {
-
+    file << "plane" << std::endl;
+    if(!name.empty())
+        file << "name" << name << std::endl;
+    file << "pcounter" << my_pcounter << std::endl;
+    for(const auto it : points)
+        file << "point" << it->get_pcounter() << std::endl;
+    file << "end" << std::endl;
 }
