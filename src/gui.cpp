@@ -426,20 +426,23 @@ void gui::draw(int width, int height)
 
         if(ImGui::BeginPopupModal(info.title.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::TextUnformatted(info.content.c_str());
-
-            if(ImGui::Button(info.abortable ? "Continue" : "OK")) {
-                ImGui::CloseCurrentPopup();
-                globals::popups.pop();
-                globals::is_running_program = true;
-            }
+            ImGui::Separator();
 
             if(info.abortable) {
-                ImGui::SameLine();
                 if(ImGui::Button("Abort")) {
                     ImGui::CloseCurrentPopup();
                     globals::popups.pop();
                     cmm_wrap::abort();
                 }
+
+
+                ImGui::SameLine();
+            }
+
+            if(ImGui::Button(info.abortable ? "Continue" : "OK")) {
+                ImGui::CloseCurrentPopup();
+                globals::popups.pop();
+                globals::is_running_program = true;
             }
 
             ImGui::EndPopup();

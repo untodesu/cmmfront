@@ -21,6 +21,7 @@ public:
 private:
     std::string comment_text {};
     size_t my_pcounter {0};
+    bool active {true};
 };
 
 #endif/* D6712DD6_FE35_4448_8A8A_9334D84F5117 */

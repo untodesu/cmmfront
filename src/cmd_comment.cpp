@@ -30,21 +30,23 @@ void CommentCmd::set_pcounter(size_t val)
 
 bool CommentCmd::on_execute(ICMM *cmm)
 {
-    if(!comment_text.empty()) {
-        globals::is_running_program = false;
-        globals::popups.push(Popup {
-            .title = "Comment",
-            .content = comment_text,
-            .abortable = true,
-        });
-    }
-    else {
-        globals::is_running_program = false;
-        globals::popups.push(Popup {
-            .title = "Comment",
-            .content = "[Empty Comment]",
-            .abortable = true,
-        });
+    if(active) {
+        if(!comment_text.empty()) {
+            globals::is_running_program = false;
+            globals::popups.push(Popup {
+                .title = "Comment",
+                .content = comment_text,
+                .abortable = true,
+            });
+        }
+        else {
+            globals::is_running_program = false;
+            globals::popups.push(Popup {
+                .title = "Comment",
+                .content = "[Empty Comment]",
+                .abortable = true,
+            });
+        }
     }
 
     return true;
@@ -52,6 +54,7 @@ bool CommentCmd::on_execute(ICMM *cmm)
 
 void CommentCmd::on_draw_imgui()
 {
+    ImGui::Checkbox("Active", &active);
     ImGui::InputTextMultiline("Text", &comment_text);
 }
 
@@ -68,6 +71,11 @@ void CommentCmd::on_load(std::ifstream &file)
     while(std::getline(file, line)) {
         if((offset = line.find("pcounter")) != std::string::npos) {
             my_pcounter = static_cast<size_t>(strtoull(line.substr(offset + 8).c_str(), nullptr, 10));
+            continue;
+        }
+
+        if((offset = line.find("inactive")) != std::string::npos) {
+            active = false;
             continue;
         }
 
@@ -91,5 +99,7 @@ void CommentCmd::on_save(std::ofstream &file) const
     file << "pcounter" << my_pcounter << std::endl;
     while(std::getline(ss, line))
         file << "text" << line << std::endl;
+    if(!active)
+    file << "inactive" << std::endl;
     file << "end" << std::endl;
 }
