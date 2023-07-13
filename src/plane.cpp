@@ -8,6 +8,7 @@ bool Plane::set_guess(const std::unordered_set<const PointCmd *> &points)
     constexpr static const size_t B = 1;
     constexpr static const size_t C = 2;
     std::vector<Eigen::Vector3d> pts = {};
+    double average_dot = 0.0;
 
     point.setZero();
     normal.setZero();
@@ -24,6 +25,17 @@ bool Plane::set_guess(const std::unordered_set<const PointCmd *> &points)
         const Eigen::Vector3d AB = (pts[B] - pts[A]);
         const Eigen::Vector3d AC = (pts[C] - pts[A]);
         normal = AB.cross(AC).normalized();
+
+        for(auto it : points)
+            average_dot += normal.dot(it->get_calc_normal());
+        average_dot /= static_cast<double>(points.size());
+
+        if(average_dot < 0.0) {
+            // Negative dot product signifies further
+            // calculations being physically unjust,
+            // so we flip the normal.
+            normal *= -1.0;
+        }
 
         // Basis vectors within the plane
         const Eigen::Vector3d U = AB.normalized();
@@ -103,6 +115,7 @@ bool Plane::set_actual(const std::unordered_set<const PointCmd *> &points)
     constexpr static const size_t B = 1;
     constexpr static const size_t C = 2;
     std::vector<Eigen::Vector3d> pts = {};
+    double average_dot = 0.0;
 
     point.setZero();
     normal.setZero();
@@ -123,6 +136,17 @@ bool Plane::set_actual(const std::unordered_set<const PointCmd *> &points)
         // Basis vectors within the plane
         const Eigen::Vector3d U = AB.normalized();
         const Eigen::Vector3d V = AB.normalized().cross(normal);
+
+        for(auto it : points)
+            average_dot += normal.dot(it->get_real_normal());
+        average_dot /= static_cast<double>(points.size());
+
+        if(average_dot < 0.0) {
+            // Negative dot product signifies further
+            // calculations being physically unjust,
+            // so we flip the normal.
+            normal *= -1.0;
+        }
 
         // Projection matrix that turns a 3D point
         // into a 2D point on a plane is made from

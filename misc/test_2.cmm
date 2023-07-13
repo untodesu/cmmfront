@@ -45,16 +45,16 @@ end
 plane
 nameplane
 pcounter5
-point1
-point4
 point3
+point4
+point1
 end
 circle
 namecircle
 pcounter6
-point1
-point4
 point3
+point4
+point1
 end
 report
 namepoint result
@@ -72,6 +72,7 @@ pcounter9
 target6
 end
 point
+namecircle center
 pcounter10
 ctarget6
 end

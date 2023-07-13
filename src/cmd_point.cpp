@@ -136,6 +136,16 @@ void PointCmd::on_draw_imgui()
         }
     }
 
+    if(target_circle && target_circle->get_pcounter() > my_pcounter) {
+        // We can't see into the future
+        target_circle = nullptr;
+    }
+
+    if(target_plane && target_plane->get_pcounter() > my_pcounter) {
+        // We can't see into the future
+        target_plane = nullptr;
+    }
+
     if(point_type == PointType::Generic) {
         temp[0] = calc_point.x();
         temp[1] = calc_point.y();
