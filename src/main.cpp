@@ -48,7 +48,7 @@ int main(int argc, char **argv)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_SAMPLES, 4);
 
-    globals::window = glfwCreateWindow(800, 600, "cmmfront", nullptr, nullptr);
+    globals::window = glfwCreateWindow(800, 600, "CMM/Front", nullptr, nullptr);
     if(!globals::window) {
         std::cerr << "glfwCreateWindow() failed" << std::endl;
         std::terminate();

@@ -33,9 +33,9 @@ void ReportCmd::set_pcounter(size_t val)
     my_pcounter = val;
 }
 
-void ReportCmd::on_execute(ICMM *cmm)
+bool ReportCmd::on_execute(ICMM *cmm)
 {
-    // Nothing, it does everything in on_draw_imgui
+    return true;
 }
 
 void ReportCmd::on_draw_imgui()

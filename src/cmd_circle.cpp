@@ -62,10 +62,11 @@ void CircleCmd::set_pcounter(size_t val)
     my_pcounter = val;
 }
 
-void CircleCmd::on_execute(ICMM *cmm)
+bool CircleCmd::on_execute(ICMM *cmm)
 {
     solve_calc();
     solve_real();
+    return true;
 }
 
 void CircleCmd::on_draw_imgui()
@@ -95,7 +96,7 @@ void CircleCmd::on_draw_imgui()
                 PointCmd *pit = reinterpret_cast<PointCmd *>(it);
                 if(points.count(pit) == 0) {
                     snprintf(stager, sizeof(stager), "%s [%04zX]", pit->get_name().c_str(), pit->get_pcounter());
-                    if(!ImGui::Selectable(stager))
+                    if(!ImGui::Selectable(stager) || points.size() >= 3)
                         continue;
                     points.insert(pit);
                     solve_calc();
@@ -109,7 +110,8 @@ void CircleCmd::on_draw_imgui()
 
     if(ImGui::ListBoxHeader("Selected points")) {
         for(auto it = points.begin(); it != points.end(); ++it) {
-            if((*it)->get_pcounter() > my_pcounter) {
+            const ICmd *it_cmd = reinterpret_cast<const ICmd *>(*it);
+            if((std::find(globals::commands.cbegin(), globals::commands.cend(), it_cmd) == globals::commands.cend()) || (it_cmd->get_pcounter() > my_pcounter)) {
                 it = points.erase(it);
                 solve_calc();
                 real_center.setZero();

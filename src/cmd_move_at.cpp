@@ -26,10 +26,23 @@ void MoveCmd::set_pcounter(size_t val)
     my_pcounter = val;
 }
 
-void MoveCmd::on_execute(ICMM *cmm)
+bool MoveCmd::on_execute(ICMM *cmm)
 {
-    // FIXME: threading
-    cmm->cmd_move_at(position);
+    CmmResult result = cmm->cmd_move_at(position);
+
+    if(result != CmmResult::Ok) {
+        cmm_wrap::abort();
+
+        globals::popups.push(Popup {
+            .title = "CMM error",
+            .content = cmm_result_str(result),
+            .abortable = false,
+        });
+
+        return false;
+    }
+
+    return true;
 }
 
 void MoveCmd::on_draw_imgui()

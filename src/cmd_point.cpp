@@ -55,26 +55,48 @@ void PointCmd::set_pcounter(size_t val)
     my_pcounter = val;
 }
 
-void PointCmd::on_execute(ICMM *cmm)
+bool PointCmd::on_execute(ICMM *cmm)
 {
-    switch(point_type) {
-        case PointType::Generic:
-            cmm->cmd_point(calc_point, calc_normal, real_point);
+    if(point_type == PointType::Generic) {
+        CmmResult result = cmm->cmd_point(calc_point, calc_normal, real_point);
+
+        if(result == CmmResult::Ok) {
+            // Command turned out to be fine
             real_normal = calc_normal;
-            break;
-        case PointType::PlaneProj:
-            calc_point = target_plane->get_calc_plane().project3d(calc_proj_target);
-            calc_normal = target_plane->get_calc_plane().get_normal();
-            real_point = target_plane->get_real_plane().project3d(calc_proj_target);
-            real_normal = target_plane->get_real_plane().get_normal();
-            break;
-        case PointType::CircleCenter:
-            calc_point = target_circle->get_calc_point();
-            calc_normal = target_circle->get_calc_plane().get_normal();
-            real_point = target_circle->get_real_point();
-            real_normal = target_circle->get_real_plane().get_normal();
-            break;
+            return true;
+        }
+        else {
+            cmm_wrap::abort();
+
+            globals::popups.push(Popup {
+                .title = "CMM error",
+                .content = cmm_result_str(result),
+                .abortable = false,
+            });
+
+            return false;
+        }
     }
+
+    if(point_type == PointType::PlaneProj) {
+        calc_point = target_plane->get_calc_plane().project3d(calc_proj_target);
+        calc_normal = target_plane->get_calc_plane().get_normal();
+        real_point = target_plane->get_real_plane().project3d(calc_proj_target);
+        real_normal = target_plane->get_real_plane().get_normal();
+        return true;
+    }
+
+    if(point_type == PointType::CircleCenter) {
+        calc_point = target_circle->get_calc_point();
+        calc_normal = target_circle->get_calc_plane().get_normal();
+        real_point = target_circle->get_real_point();
+        real_normal = target_circle->get_real_plane().get_normal();
+        return true;
+    }
+
+    std::cerr << "How did we end up here?" << std::endl;
+    std::terminate();
+    return false;
 }
 
 void PointCmd::on_draw_imgui()

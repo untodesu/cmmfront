@@ -12,7 +12,7 @@ bool CMMStub::get_cap(CmmCap cap) const
     }
 }
 
-double CMMStub::get_opt(CmmOpt opt) const
+double CMMStub::get_opt_double(CmmOpt opt) const
 {
     switch(opt) {
         case CmmOpt::DebugRandomness:
@@ -24,7 +24,17 @@ double CMMStub::get_opt(CmmOpt opt) const
     }
 }
 
-void CMMStub::set_opt(CmmOpt opt, double value)
+int CMMStub::get_opt_int(CmmOpt opt) const
+{
+    switch(opt) {
+        case CmmOpt::DebugResult:
+            return static_cast<int>(result);
+        default:
+            return std::numeric_limits<int>::max();
+    }
+}
+
+void CMMStub::set_opt_double(CmmOpt opt, double value)
 {
     switch(opt) {
         case CmmOpt::DebugRandomness:
@@ -40,6 +50,15 @@ void CMMStub::set_opt(CmmOpt opt, double value)
     }
 }
 
+void CMMStub::set_opt_int(CmmOpt opt, int value)
+{
+    switch(opt) {
+        case CmmOpt::DebugResult:
+            result = static_cast<CmmResult>(value);
+            return;
+    }
+}
+
 const char *CMMStub::get_ident() const
 {
     return "DebugCMM";
@@ -50,15 +69,16 @@ bool CMMStub::is_busy() const
     return cmm_busy;
 }
 
-void CMMStub::cmd_move_at(const Eigen::Vector3d &v)
+CmmResult CMMStub::cmd_move_at(const Eigen::Vector3d &v)
 {
     cmm_busy = true;
     if(opt_time_delay != 0.0)
         std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int64_t>(opt_time_delay * 1000.0)));
     cmm_busy = false;
+    return result;
 }
 
-void CMMStub::cmd_point(const Eigen::Vector3d &pos, const Eigen::Vector3d &normal, Eigen::Vector3d &out)
+CmmResult CMMStub::cmd_point(const Eigen::Vector3d &pos, const Eigen::Vector3d &normal, Eigen::Vector3d &out)
 {
     std::mt19937_64 device = std::mt19937_64{std::random_device{}()};
     std::uniform_real_distribution<float> dist = {};
@@ -69,4 +89,10 @@ void CMMStub::cmd_point(const Eigen::Vector3d &pos, const Eigen::Vector3d &norma
     if(opt_time_delay != 0.0)
         std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int64_t>(opt_time_delay * 1000.0)));
     cmm_busy = false;
+    return result;
+}
+
+void CMMStub::set_result(CmmResult result)
+{
+    this->result = result;
 }

@@ -8,10 +8,8 @@ void cmm_wrap::step()
     if(!globals::commands.empty() && globals::current != globals::commands.end()) {
         ICmd *command = (*globals::current);
 
-        // Run whatever code the command implements
-        command->on_execute(globals::machine);
-
-        globals::current++;
+        if(command->on_execute(globals::machine))
+            globals::current++;
         return;
     }
     else {

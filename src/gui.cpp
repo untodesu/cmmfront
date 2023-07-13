@@ -96,6 +96,8 @@ static bool write_file(const std::filesystem::path &path)
         it->on_save(file);
     file.close();
 
+    last_path = path;
+
     return true;
 }
 
@@ -115,6 +117,7 @@ static void file_new()
     globals::commands.clear();
     globals::selected_command = nullptr;
     globals::current = globals::commands.end();
+    last_path.clear();
 }
 
 static void file_open()
@@ -122,7 +125,7 @@ static void file_open()
     std::filesystem::path cwd = std::filesystem::current_path();
     if(!last_path.empty())
         cwd = last_path.parent_path();
-    pfd::open_file diag{"Open", cwd.string(), {"CMM files", "*.cmm"}, pfd::opt::none};
+    pfd::open_file diag{"Open", cwd.string(), {"CMM/Front files", "*.cmm"}, pfd::opt::none};
     const std::vector<std::string> result = diag.result();
     if(!result.empty()) {
         read_file(result[0]);
@@ -132,7 +135,7 @@ static void file_open()
 static void file_save()
 {
     if(last_path.empty()) {
-        pfd::save_file diag{"Save as", std::filesystem::current_path().string(), {"CMM files", "*.cmm"}, pfd::opt::none};
+        pfd::save_file diag{"Save as", std::filesystem::current_path().string(), {"CMM/Front files", "*.cmm"}, pfd::opt::none};
         const std::string result = diag.result();
         if(!result.empty()) {
             write_file(result);
@@ -299,15 +302,21 @@ void gui::draw(int width, int height)
         if(globals::machine->get_cap(CmmCap::DebugCMM)) {
             if(ImGui::BeginMenu("Debug")) {
                 double temp;
+                int temp_int;
 
-                temp = globals::machine->get_opt(CmmOpt::DebugRandomness);
+                temp = globals::machine->get_opt_double(CmmOpt::DebugRandomness);
                 if(ImGui::InputDouble("Randomness", &temp)) {
-                    globals::machine->set_opt(CmmOpt::DebugRandomness, temp);
+                    globals::machine->set_opt_double(CmmOpt::DebugRandomness, temp);
                 }
 
-                temp = globals::machine->get_opt(CmmOpt::DebugTimeDelay);
+                temp = globals::machine->get_opt_double(CmmOpt::DebugTimeDelay);
                 if(ImGui::InputDouble("Time Delay", &temp)) {
-                    globals::machine->set_opt(CmmOpt::DebugTimeDelay, temp);
+                    globals::machine->set_opt_double(CmmOpt::DebugTimeDelay, temp);
+                }
+
+                temp_int = globals::machine->get_opt_int(CmmOpt::DebugResult);
+                if(ImGui::Combo("Result", &temp_int, "Ok\0Aborted\0HardwareFail\0")) {
+                    globals::machine->set_opt_int(CmmOpt::DebugResult, temp_int);
                 }
 
                 ImGui::EndMenu();
@@ -418,18 +427,19 @@ void gui::draw(int width, int height)
         if(ImGui::BeginPopupModal(info.title.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::TextUnformatted(info.content.c_str());
 
-            if(info.abortable && ImGui::Button("Abort")) {
-                ImGui::CloseCurrentPopup();
-                globals::popups.pop();
-                cmm_wrap::abort();
-
-                ImGui::SameLine();
-            }
-
             if(ImGui::Button(info.abortable ? "Continue" : "OK")) {
                 ImGui::CloseCurrentPopup();
                 globals::popups.pop();
                 globals::is_running_program = true;
+            }
+
+            if(info.abortable) {
+                ImGui::SameLine();
+                if(ImGui::Button("Abort")) {
+                    ImGui::CloseCurrentPopup();
+                    globals::popups.pop();
+                    cmm_wrap::abort();
+                }
             }
 
             ImGui::EndPopup();

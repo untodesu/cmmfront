@@ -28,7 +28,7 @@ void CommentCmd::set_pcounter(size_t val)
     my_pcounter = val;
 }
 
-void CommentCmd::on_execute(ICMM *cmm)
+bool CommentCmd::on_execute(ICMM *cmm)
 {
     if(!comment_text.empty()) {
         globals::is_running_program = false;
@@ -46,6 +46,8 @@ void CommentCmd::on_execute(ICMM *cmm)
             .abortable = true,
         });
     }
+
+    return true;
 }
 
 void CommentCmd::on_draw_imgui()

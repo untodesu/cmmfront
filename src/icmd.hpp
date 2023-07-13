@@ -20,7 +20,7 @@ public:
     virtual std::string get_name() const = 0;
     virtual size_t get_pcounter() const = 0;
     virtual void set_pcounter(size_t val) = 0;
-    virtual void on_execute(ICMM *cmm) = 0;
+    virtual bool on_execute(ICMM *cmm) = 0;
     virtual void on_draw_imgui() = 0;
     virtual bool validate() = 0;
     virtual void on_load(std::ifstream &file) = 0;

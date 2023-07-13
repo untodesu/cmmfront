@@ -12,7 +12,7 @@ public:
     virtual std::string get_name() const override;
     virtual size_t get_pcounter() const override;
     virtual void set_pcounter(size_t val) override;
-    virtual void on_execute(ICMM *cmm) override;
+    virtual bool on_execute(ICMM *cmm) override;
     virtual void on_draw_imgui() override;
     virtual bool validate() override;
     virtual void on_load(std::ifstream &file) override;
