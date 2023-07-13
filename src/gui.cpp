@@ -213,7 +213,7 @@ static void cmd_run()
         if(!it->validate()) {
             globals::popups.push(Popup {
                 .title = "Validation",
-                .content = std::string{"Command "} + std::string{it->get_name()} + std::string{ "failed validation check!"},
+                .content = std::string{"Command `"} + std::string{it->get_name()} + std::string{ "' failed validation check!"},
                 .abortable = false,
             });
             globals::selected_command = it;

@@ -122,6 +122,20 @@ void PointCmd::on_draw_imgui()
         point_type = static_cast<PointType>(index);
     }
 
+    if(target_circle) {
+        if(std::find(globals::commands.cbegin(), globals::commands.cend(), target_circle) == globals::commands.cend()) {
+            // Drop invalid targets
+            target_circle = nullptr;
+        }
+    }
+
+    if(target_plane) {
+        if(std::find(globals::commands.cbegin(), globals::commands.cend(), target_plane) == globals::commands.cend()) {
+            // Drop invalid targets
+            target_plane = nullptr;
+        }
+    }
+
     if(point_type == PointType::Generic) {
         temp[0] = calc_point.x();
         temp[1] = calc_point.y();

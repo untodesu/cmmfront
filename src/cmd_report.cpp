@@ -75,6 +75,13 @@ void ReportCmd::on_draw_imgui()
     }
 
     if(target) {
+        if(std::find(globals::commands.cbegin(), globals::commands.cend(), target) == globals::commands.cend()) {
+            // Drop invalid targets
+            target = nullptr;
+        }
+    }
+
+    if(target) {
         CmdType type = target->get_type();
 
         if(type == CmdType::MeasurePoint) {
