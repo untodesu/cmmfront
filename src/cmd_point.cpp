@@ -174,11 +174,10 @@ void PointCmd::on_draw_imgui()
                 calc_point =  target_plane->get_calc_plane().project3d(calc_proj_target);
             else
                 calc_point = Eigen::Vector3d{};
+            real_normal = Eigen::Vector3d{};
             real_point = Eigen::Vector3d{};
         }
-    }
 
-    if(point_type == PointType::PlaneProj) {
         if(ImGui::ListBoxHeader("Plane")) {
             for(auto it : globals::commands) {
                 if(it->get_pcounter() < my_pcounter && it->get_type() == CmdType::MeasurePlane) {
@@ -188,7 +187,9 @@ void PointCmd::on_draw_imgui()
                     if(!ImGui::Selectable(stager, &selected))
                         continue;
                     target_plane = pcmd;
+                    calc_normal = target_plane->get_calc_plane().get_normal();
                     calc_point = target_plane->get_calc_plane().project3d(calc_proj_target);
+                    real_normal = Eigen::Vector3d{};
                     real_point = Eigen::Vector3d{};
                 }
             }
@@ -207,7 +208,9 @@ void PointCmd::on_draw_imgui()
                     if(!ImGui::Selectable(stager, &selected))
                         continue;
                     target_circle = ccmd;
+                    calc_normal = target_circle->get_calc_plane().get_normal();
                     calc_point = target_circle->get_calc_point();
+                    real_normal = Eigen::Vector3d{};
                     real_point = Eigen::Vector3d{};
                 }
             }
